@@ -1,0 +1,203 @@
+meta:
+  client: ToolShop (Practice Software Testing, Testsmith)
+  application: Practice Software Testing - Toolshop v5.0
+  version: '0.1'
+  date: '2026-11-17'
+  brd_owner: ''
+  prepared_by: ''
+  status: Draft
+purpose: 'Practice exercise to validate the performance-testing harness end to end on a demo shop (ToolShop / Practice Software Testing). There is no real business event or production risk driving this test.'
+objectives: []
+scope_in:
+- Practice Software Testing - Toolshop v5.0 web application (Angular UI) and its REST API (Swagger-documented)
+scope_out:
+- "T4 - Add item to cart: not discovered; write actions, deferred to a later phase"
+- "T5 - Checkout and place order: not discovered; write actions, deferred to a later phase"
+- "Load testing the public site (https://practicesoftwaretesting.com/): out of scope - Testsmith's authorisation was never confirmed; load runs target a local Docker copy owned by the test lead instead"
+stakeholders:
+- role: Business owner
+  name: ''
+  responsibility: Owns requirements and accepts results
+- role: Environment owner
+  name: ''
+  responsibility: Authorises testing in the target environment
+- role: Operations / support contact
+  name: ''
+  responsibility: Agrees stop conditions, informed before and during runs
+- role: Performance test lead
+  name: ''
+  responsibility: Plans and runs the test, reports results
+- role: Development / architecture contact
+  name: ''
+  responsibility: Supports diagnosis and fixes
+transactions:
+- {id: "T1", name: "Browse product catalogue", user_type: "Guest", criticality: "Medium", traffic_share: "44%", flow: "Open the product listing page and view products", measure_start_end: "Start: listing request sent; End: product list response received", notes: ""}
+- {id: "T2", name: "Search products by keyword", user_type: "Guest", criticality: "High", traffic_share: "31%", flow: "Enter a keyword and view results", measure_start_end: "Start: search request sent; End: search results response received", notes: ""}
+- {id: "T3", name: "View product details", user_type: "Guest", criticality: "Medium", traffic_share: "25%", flow: "Open one product page", measure_start_end: "Start: product request sent; End: product detail response received", notes: ""}
+workload:
+  peak_concurrent_users: '50 concurrent users, sitewide, split across T1-T3 by traffic share above'
+  peak_tps: ''
+  peak_window: 'Not applicable - single practice run, not a real traffic peak. Planned run: ~15 minutes total (2 min ramp-up, 10 min steady state at 50 users, 3 min ramp-down). Runs target the test lead''s own local Docker copy, so no external permission is needed; first execution will still be a smoke run (1 user, 1 iteration) before any load. First load run: 5 users (test lead''s choice); further step-ups toward the 50-user peak happen only when the test lead asks. PR-01 to PR-06 are judged only against the 50-user peak load condition stated in each requirement; any run below that level is reported as "not measured at peak load".'
+  avg_daily_volume: ''
+  growth_12m: ''
+  think_time: 'Random 1-3 seconds between steps within a journey; no additional wait between iterations.'
+  geography: ''
+  data_volumes: ''
+  basis: assumed
+requirements:
+- {id: "PR-01", transaction: "T2 - Search products by keyword", metric: "response time", target: "<= 2 s", percentile: "p95", load_condition: "Peak load: 50 concurrent users sitewide", priority: "Must"}
+- {id: "PR-02", transaction: "T2 - Search products by keyword", metric: "response time", target: "<= 4 s", percentile: "p99", load_condition: "Peak load: 50 concurrent users sitewide", priority: "Must"}
+- {id: "PR-03", transaction: "T5 - Checkout and place order", metric: "response time", target: "<= 3 s", percentile: "p95", load_condition: "Peak load: 50 concurrent users sitewide", priority: "Must", notes: "T5 deferred to a later phase"}
+- {id: "PR-04", transaction: "T5 - Checkout and place order", metric: "response time", target: "<= 5 s", percentile: "p99", load_condition: "Peak load: 50 concurrent users sitewide", priority: "Must", notes: "T5 deferred to a later phase"}
+- {id: "PR-05", transaction: "All transactions", metric: "error rate", target: "< 1%", percentile: "n/a", load_condition: "Peak load: 50 concurrent users sitewide", priority: "Must"}
+- {id: "PR-06", transaction: "T1, T3 - Browse product catalogue / View product details", metric: "response time", target: "<= 2 s", percentile: "p95", load_condition: "Peak load: 50 concurrent users sitewide", priority: "Should", notes: ""}
+- {id: "PR-07", transaction: "T4 - Add item to cart", metric: "response time", target: "<= 2 s", percentile: "p95", load_condition: "Peak load: 50 concurrent users sitewide", priority: "Should", notes: "T4 deferred to a later phase"}
+test_types:
+- type: Baseline (single user)
+  needed: 'yes'
+  notes: ''
+- type: Load
+  needed: 'yes'
+  notes: ''
+- type: Stress
+  needed: ''
+  notes: ''
+- type: Spike
+  needed: ''
+  notes: ''
+- type: Endurance (soak)
+  needed: ''
+  notes: ''
+- type: Scalability
+  needed: ''
+  notes: ''
+environment:
+  personal_data_confirmation: 'No real personal or payment data will be used; all names, emails, addresses and card details will be made-up test values. Checkout will use only dummy payment details the site allows for practice (not yet verified whether it accepts them). This confirmation is the test lead''s own statement and has not been independently checked.'
+abort_conditions:
+- {condition: "Error rate", threshold: "Above 2% for 1 minute", action: "Stop the run and review"}
+- {condition: "Response time", threshold: "p95 above 3x the target of the affected transaction for 2 minutes", action: "Stop the run"}
+- {condition: "Server health", threshold: "Any HTTP 429, 503, or a CDN/firewall block or challenge page (CPU/memory not observable in this environment)", action: "Stop immediately"}
+- {condition: "Impact on other systems or users", threshold: "Any sign: slowdown reports, owner notice, or unusual responses", action: "Stop immediately"}
+- {condition: "Request from operations or environment owner", threshold: "Any time", action: "Stop immediately"}
+monitoring_reporting:
+  metrics: 'Response time (p95/p99) and error rate, measured client-side via k6 at API/HTTP level (not browser rendering). No server-side CPU/memory available.'
+  tools: ''
+  interim_updates: ''
+  final_report: ''
+risks:
+- {type: "Assumption", description: "This test has no real business driver; it is a practice/validation exercise for the performance-testing harness on a demo application.", owner: "", impact: ""}
+- {type: "Assumption", description: "Peak load assumed at 50 concurrent users sitewide (not measured or forecast from real traffic); no separate TPS figure given. Split across T1-T3 by the traffic shares recorded in the transactions table (recomputed to 44%/31%/25% after T4 and T5 moved to scope_out, keeping the original 35:25:20 ratio).", owner: "", impact: ""}
+- {type: "Assumption", description: "Performance requirements PR-01 to PR-06 are assumed targets (not derived from a client SLA).", owner: "", impact: ""}
+- {type: "Assumption", description: "Business transaction definitions (T1-T5: names, criticality, traffic share, flow, measurement points) are assumed/stated by the test lead for this practice project, not confirmed by a client business owner.", owner: "", impact: ""}
+- {type: "Assumption", description: "Peak window/run duration assumed as a single ~15 minute practice run (2 min ramp-up, 10 min steady state, 3 min ramp-down); first execution will be a smoke run (1 user, 1 iteration) before any load.", owner: "", impact: ""}
+- {type: "Assumption", description: "Think time assumed at random 1-3 seconds between steps, no extra pacing between iterations.", owner: "", impact: ""}
+- {type: "Constraint", description: "Load testing the public site (https://practicesoftwaretesting.com/) remains blocked pending Testsmith's permission and is now out of scope (see scope_out); the active target for load runs is the test lead's own local Docker copy, which needs no such permission.", owner: "", impact: ""}
+- {type: "Assumption", description: "The local Docker copy is assumed to expose the same REST API (same paths, methods including QUERY, response shapes) as api-catalogue.yaml, which was built from discovery against the public site - this has not been separately verified against the local copy.", owner: "", impact: ""}
+- {type: "Assumption", description: "All abort conditions in abort_conditions are the test lead's own assumptions, not yet agreed with an environment owner or operations contact.", owner: "", impact: ""}
+- {type: "Constraint", description: "Hard limits assumed regardless of other conditions: never more than 50 virtual users, never longer than 20 minutes per run.", owner: "", impact: ""}
+exit_criteria: []
+open_items:
+- question: 'Resolved for now: load runs target the test lead''s own local Docker copy instead of the public site, so Testsmith''s authorisation is not needed for this phase. Revisit only if testing against the public site is wanted again.'
+  owner: Test lead
+  due: ''
+  status: Resolved
+- question: 'Base URL confirmed (http://localhost:8091). Still open: confirm that the local Docker copy''s REST API matches api-catalogue.yaml (built from discovery against the public site, same paths/methods incl. QUERY) before relying on its results.'
+  owner: Test lead
+  due: ''
+  status: Open
+- question: Confirm how many test accounts are available and whether one account can be used by several virtual users at once.
+  owner: Test lead
+  due: ''
+  status: Open
+- question: Whether the site's checkout accepts dummy/test payment details for practice has not been verified.
+  owner: Test lead
+  due: ''
+  status: Open
+- question: 'Which further test types (stress, spike, soak, scalability) are needed in addition to Baseline and Load, which are confirmed as yes?'
+  owner: Test lead
+  due: ''
+  status: Open
+approvals:
+- name: ''
+  role: Business owner
+  decision: ''
+  date: ''
+- name: ''
+  role: Environment owner
+  decision: ''
+  date: ''
+- name: ''
+  role: Operations contact
+  decision: ''
+  date: ''
+evidence:
+- field: meta.application
+  source: 'https://practicesoftwaretesting.com/ page title: ''Practice Software Testing - Toolshop - v5.0'''
+- field: scope_in
+  source: 'practicesoftwaretesting.com meta description (web application for practising testing); testsmith-io/practice-software-testing GitHub description: Angular application / REST API / Swagger'
+- field: meta.client
+  source: Project folder name chosen by user; Testsmith is the publisher per its GitHub organisation page
+- field: purpose
+  source: user answer, 2026-11-17
+- field: workload.peak_concurrent_users
+  source: user answer, 2026-11-17
+- field: workload.basis
+  source: user answer, 2026-11-17
+- field: requirements (PR-01 to PR-06)
+  source: user answer, 2026-11-17
+- field: test_types (Baseline)
+  source: user answer, 2026-11-17
+- field: transactions (T1-T5)
+  source: user answer, 2026-11-17
+- field: requirements (transaction references updated)
+  source: user answer, 2026-11-17
+- field: test_types (Load)
+  source: user answer, 2026-11-17
+- field: workload.peak_window
+  source: user answer, 2026-11-17
+- field: workload.think_time
+  source: user answer, 2026-11-17
+- field: environment.target
+  source: user answer, 2026-11-17 (correction of an earlier answer in the same batch)
+- field: environment.owner
+  source: user answer, 2026-11-17
+- field: environment.comparison_with_production
+  source: user answer, 2026-11-17
+- field: environment.third_party_services
+  source: user answer, 2026-11-17
+- field: environment.monitoring_access
+  source: user answer, 2026-11-17
+- field: environment.test_data
+  source: user answer, 2026-11-17
+- field: environment.personal_data_confirmation
+  source: user answer, 2026-11-17
+- field: monitoring_reporting.metrics
+  source: user answer, 2026-11-17
+- field: environment.test_windows
+  source: user answer, 2026-11-17
+- field: abort_conditions
+  source: user answer, 2026-11-17
+- field: transactions (T4, T5 removed) and scope_out (T4, T5 added)
+  source: user answer, 2026-11-18 (not discovered during API discovery; write actions deferred to a later phase)
+- field: transactions (T1, T2, T3 traffic_share recomputed to 44%/31%/25%)
+  source: user answer, 2026-11-18 (recomputed to preserve the original 35:25:20 ratio after T4 and T5 moved to scope_out; assumed, not measured)
+- field: requirements (PR-03, PR-04 flagged deferred; PR-06 split - T1/T3 kept active, T4 moved to new PR-07, both flagged deferred)
+  source: user answer, 2026-11-18
+- field: open_items (environment-owner authorisation item reworded)
+  source: user answer, 2026-11-18
+- field: environment.target, environment.owner, environment.test_windows, workload.peak_window (local Docker copy, owned by test lead, replaces the public site as the load-test target)
+  source: 'User input: "We will run the 5-user test against a local copy instead. Record in brd.yaml: target environment = local Docker copy of Toolshop (owner: me), and keep the public-site run out of scope." 2026-11-18'
+- field: scope_out (public-site load testing added) and risks (Constraint reworded; new Assumption on local-vs-public API parity)
+  source: user answer, 2026-11-18
+- field: open_items (authorisation item marked Resolved for this phase; new item added for local base URL/port and API parity confirmation)
+  source: user answer, 2026-11-18
+- field: environment.target (local base URL http://localhost:8091) and open_items (base URL confirmed)
+  source: 'User input: "Local target base URL: http://localhost:8091 (I verified it with curl)." 2026-11-18'
+- field: environment (target, owner, comparison_with_production, third_party_services, test_data, monitoring_access, test_windows removed - now sourced from environments.yaml at check/render time; only personal_data_confirmation kept)
+  source: user answer, 2026-11-18
+- field: risks (CDN/WAF risk and Testsmith-test-window assumption removed as public-site-only; five abort-condition assumption rows consolidated into one)
+  source: user answer, 2026-11-18
+- field: open_items (rate-limit/CDN item, shared-public-site peak-load item, T4/T5-shared-site item, and agree-with-Testsmith item removed as public-site-only)
+  source: user answer, 2026-11-18
+- field: workload.peak_window (first load run is 5 users, further steps only on request; PR-01 to PR-06 judged only at the 50-user peak, lower runs reported as "not measured at peak load")
+  source: user answer, 2026-11-18

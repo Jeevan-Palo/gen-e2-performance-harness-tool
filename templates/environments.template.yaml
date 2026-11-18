@@ -1,0 +1,39 @@
+# Copy to projects/<client>/<app>/environments.yaml. One block per environment you may test.
+# Switch with: python tools/envconf.py use <project_dir> <name>      (or edit the 'active:' line)
+# NEVER put passwords, tokens or keys here. List only the NAMES of the environment variables that hold them.
+active: local
+environments:
+  local:
+    description: ""                  # e.g. Local Docker copy run by the test lead
+    type: local                      # local | test | staging | production | public
+    base_url: "http://localhost:8080"  # scheme://host[:port] of the API the script calls
+    owner: ""                        # who owns the system
+    authorisation: not_required      # not_required | confirmed_by_owner | accepted_by_test_lead | not_confirmed
+    authorisation_note: ""           # who confirmed, how, when. Needed for accepted_by_test_lead
+    max_vus: 50                      # hard cap for this environment (runs are refused above it)
+    max_run_minutes: 20
+    test_windows: ""
+    monitoring: {source: none, detail: ""}    # docker_stats | azure | dynatrace | client_apm | none
+    comparison_with_production: ""
+    third_party_services: ""
+    test_data: ""                    # accounts and data needed here (no credentials)
+    credentials_env_vars: []         # e.g. [APP_USER, APP_PASSWORD]  (names only)
+    known_differences: ""            # known differences from the API catalogue / other environments
+    verified: {date: "", by: "", note: ""}    # last check that this environment matches the catalogue
+  example-remote:
+    description: ""
+    type: staging
+    base_url: "https://example.invalid"
+    owner: ""
+    authorisation: not_confirmed
+    authorisation_note: ""
+    max_vus: 5
+    max_run_minutes: 20
+    test_windows: ""
+    monitoring: {source: none, detail: ""}
+    comparison_with_production: ""
+    third_party_services: ""
+    test_data: ""
+    credentials_env_vars: []
+    known_differences: ""
+    verified: {date: "", by: "", note: ""}

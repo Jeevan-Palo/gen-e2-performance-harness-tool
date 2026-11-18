@@ -1,0 +1,70 @@
+# Copy to projects/<client>/<app>/brd.yaml. Leave unknown values empty ("" or []). Never guess.
+meta:
+  client: ""
+  application: ""
+  version: "0.1"
+  date: ""            # YYYY-MM-DD
+  brd_owner: ""       # client BRD owner, name and title
+  prepared_by: ""
+  status: "Draft"     # Draft | In review | Approved (Approved only by client)
+purpose: ""           # why performance testing now (business event or risk)
+objectives: []        # e.g. "Confirm response-time targets at expected peak load"
+scope_in: []          # applications, services, interfaces, user journeys
+scope_out: []
+stakeholders:         # business owner, environment owner, operations contact, test lead, dev contact
+  - {role: "Business owner", name: "", responsibility: "Owns requirements and accepts results"}
+  - {role: "Environment owner", name: "", responsibility: "Authorises testing in the target environment"}
+  - {role: "Operations / support contact", name: "", responsibility: "Agrees stop conditions, informed before and during runs"}
+  - {role: "Performance test lead", name: "", responsibility: "Plans and runs the test, reports results"}
+  - {role: "Development / architecture contact", name: "", responsibility: "Supports diagnosis and fixes"}
+transactions:         # one entry per business transaction
+  - {id: "T1", name: "", user_type: "", criticality: "", traffic_share: "", flow: "", measure_start_end: "", notes: ""}
+workload:
+  peak_concurrent_users: ""   # state whether sitewide or per transaction
+  peak_tps: ""
+  peak_window: ""             # e.g. 18:00 to 22:00, 4 hours
+  avg_daily_volume: ""
+  growth_12m: ""
+  think_time: ""
+  geography: ""
+  data_volumes: ""
+  basis: ""                   # measured | forecast | assumed
+requirements:         # each must be measurable
+  - {id: "PR-01", transaction: "", metric: "", target: "", percentile: "", load_condition: "", priority: ""}
+test_types:           # needed: yes | no
+  - {type: "Baseline (single user)", needed: "", notes: ""}
+  - {type: "Load", needed: "", notes: ""}
+  - {type: "Stress", needed: "", notes: ""}
+  - {type: "Spike", needed: "", notes: ""}
+  - {type: "Endurance (soak)", needed: "", notes: ""}
+  - {type: "Scalability", needed: "", notes: ""}
+environment:
+  target: ""
+  owner: ""
+  comparison_with_production: ""
+  third_party_services: ""    # real, stubbed or virtualised, and who approves
+  test_data: ""               # accounts, products, volumes, refresh method
+  personal_data_confirmation: ""   # confirm masked or synthetic data only
+  monitoring_access: ""       # APM/infra/logs/db and who grants access
+  test_windows: ""
+abort_conditions:     # must be agreed with operations
+  - {condition: "Error rate", threshold: "", action: ""}
+  - {condition: "Response time", threshold: "", action: ""}
+  - {condition: "Server health", threshold: "", action: ""}
+  - {condition: "Impact on other systems or users", threshold: "", action: ""}
+  - {condition: "Request from operations or environment owner", threshold: "", action: ""}
+monitoring_reporting:
+  metrics: ""
+  tools: ""
+  interim_updates: ""
+  final_report: ""
+risks:                # type: Assumption | Constraint | Dependency | Risk
+  - {type: "", description: "", owner: "", impact: ""}
+exit_criteria: []
+open_items:           # {question, owner, due, status}
+  - {question: "", owner: "", due: "", status: "Open"}
+approvals:            # filled by humans only
+  - {name: "", role: "Business owner", decision: "", date: ""}
+  - {name: "", role: "Environment owner", decision: "", date: ""}
+  - {name: "", role: "Operations contact", decision: "", date: ""}
+evidence: []          # {field: "workload.peak_tps", source: "file p.N or user answer, date"}

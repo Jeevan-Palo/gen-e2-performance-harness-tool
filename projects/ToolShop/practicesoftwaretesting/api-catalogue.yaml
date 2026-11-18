@@ -1,0 +1,163 @@
+meta:
+  application: "Practice Software Testing - Toolshop v5.0"
+  base_url: "http://localhost:8091"   # run target (local Docker copy, owned by the test lead). APIs below were discovered against the public site (https://api.practicesoftwaretesting.com) - see each entry's evidence.source and the notes below on assumed parity.
+  created: "2026-11-18"
+  brd_version: "0.1"
+  excluded_hosts:
+    - "www.google-analytics.com"   # third-party analytics beacons seen on every page; not application API, do not load test
+apis:
+  - id: "API-001"
+    name: "Get category tree"
+    method: "GET"
+    path: "/categories/tree"
+    transaction: "T1"
+    step_order: 1
+    page: "Home / product catalogue (https://practicesoftwaretesting.com/)"
+    business_flow: "Page load: populate the category filter tree shown beside the product listing"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {}
+    response: {status: 200, content_type: "application/json", fields: ["id", "name", "slug", "parent_id", "sub_categories"], notes: "Nested tree, 3 top-level categories observed (Hand Tools, Power Tools, Other)"}
+    dynamic_values: []
+    depends_on: []
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "None - public read"
+    observed_latency_ms: null
+    evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/ - network capture on page load", confidence: "medium", observed_at: "2026-11-18"}
+  - id: "API-002"
+    name: "Get product spec names"
+    method: "GET"
+    path: "/product-specs/names"
+    transaction: "T1"
+    step_order: 2
+    page: "Home / product catalogue (https://practicesoftwaretesting.com/)"
+    business_flow: "Page load: populate available specification filter names/values (not exposed as a distinct filter widget in the UI observed, but requested on every listing load)"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {}
+    response: {status: 200, content_type: "application/json", fields: ["name", "values", "unit"], notes: ""}
+    dynamic_values: []
+    depends_on: []
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "None - public read"
+    observed_latency_ms: null
+    evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/ - network capture on page load", confidence: "medium", observed_at: "2026-11-18"}
+  - id: "API-003"
+    name: "Get brands"
+    method: "GET"
+    path: "/brands"
+    transaction: "T1"
+    step_order: 3
+    page: "Home / product catalogue (https://practicesoftwaretesting.com/)"
+    business_flow: "Page load: populate the 'By brand' filter list"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {}
+    response: {status: 200, content_type: "application/json", fields: ["id", "name", "slug"], notes: "3 brands observed"}
+    dynamic_values: []
+    depends_on: []
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "None - public read"
+    observed_latency_ms: null
+    evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/ - network capture on page load", confidence: "medium", observed_at: "2026-11-18"}
+  - id: "API-004"
+    name: "List products (catalogue, paged/filtered)"
+    method: "QUERY"
+    path: "/products"
+    transaction: "T1"
+    step_order: 4
+    page: "Home / product catalogue (https://practicesoftwaretesting.com/)"
+    business_flow: "Page load: fetch the first page of the product listing with default filters applied by the UI"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {content_type: "application/json", example: {page: "1", between: "price,1,100", is_rental: "false"}, notes: "Sent as an HTTP QUERY request (method literally 'QUERY', not GET/POST) - confirmed in Chromium's network log, no OPTIONS preflight observed."}
+    response: {status: 200, content_type: "application/json", fields: ["current_page", "data"], notes: "data[] items: id, name, description, price, is_location_offer, is_rental, co2_rating, in_stock, is_eco_friendly, product_image, category, brand. Body capture was truncated at 1500 chars so other pagination fields (e.g. total/last_page) may exist but were not confirmed."}
+    dynamic_values: []
+    depends_on: []
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "None - public read"
+    observed_latency_ms: null
+    evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/ - network capture on page load", confidence: "medium", observed_at: "2026-11-18"}
+  - id: "API-005"
+    name: "Search products by keyword"
+    method: "QUERY"
+    path: "/products/search"
+    transaction: "T2"
+    step_order: 1
+    page: "Home / product catalogue (https://practicesoftwaretesting.com/) - Search panel"
+    business_flow: "User types a keyword into the Search box and clicks the Search button"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {content_type: "application/json", example: {q: "Hammer"}, notes: "Sent as an HTTP QUERY request (method literally 'QUERY'). Tested with keyword 'Hammer' -> 6 results."}
+    response: {status: 200, content_type: "application/json", fields: ["current_page", "data"], notes: "Same product shape as API-004."}
+    dynamic_values: []
+    depends_on: []
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "Search keyword only; 'Hammer' used during discovery, chosen because it is a real catalogue term, not sensitive data"
+    observed_latency_ms: null
+    evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/ - search for 'Hammer', network capture", confidence: "medium", observed_at: "2026-11-18"}
+  - id: "API-006"
+    name: "Get product detail"
+    method: "GET"
+    path: "/products/{id}"
+    transaction: "T3"
+    step_order: 1
+    page: "Product detail page (https://practicesoftwaretesting.com/product/{id})"
+    business_flow: "User opens one product from the catalogue or search results"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {}
+    response: {status: 200, content_type: "application/json", fields: ["id", "name", "description", "price", "is_location_offer", "is_rental", "co2_rating", "in_stock", "is_eco_friendly", "product_image", "category", "brand"], notes: "Body capture truncated at 1500 chars; 'brand' field present but cut off, not fully confirmed beyond the id/name seen elsewhere."}
+    dynamic_values:
+      - {name: "product.id", from_api: "API-004", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}"}
+      - {name: "product.id", from_api: "API-005", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}"}
+    depends_on: ["API-004", "API-005"]
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "Product id from the listing/search response"
+    observed_latency_ms: null
+    evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/product/01M7P2PECT1X0BN3BM389H891Z - network capture", confidence: "medium", observed_at: "2026-11-18"}
+  - id: "API-007"
+    name: "Get related products"
+    method: "GET"
+    path: "/products/{id}/related"
+    transaction: "T3"
+    step_order: 2
+    page: "Product detail page (https://practicesoftwaretesting.com/product/{id})"
+    business_flow: "Loaded automatically below the main product detail to show a 'Related products' carousel"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {}
+    response: {status: 200, content_type: "application/json", fields: ["id", "name", "description", "price", "is_location_offer", "is_rental", "in_stock", "is_eco_friendly", "product_image", "category", "brand"], notes: "Array of product summaries, same category as the viewed product."}
+    dynamic_values:
+      - {name: "product.id", from_api: "API-004", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}/related"}
+      - {name: "product.id", from_api: "API-005", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}/related"}
+    depends_on: ["API-006", "API-004", "API-005"]
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "Product id from the listing/search response"
+    observed_latency_ms: null
+    evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/product/01M7P2PECT1X0BN3BM389H891Z - network capture", confidence: "medium", observed_at: "2026-11-18"}
+flows:
+  - {transaction: "T1", steps: ["API-001", "API-002", "API-003", "API-004"], parallel: ["API-001", "API-002", "API-003", "API-004"], note: "All four calls fire concurrently on page load (independent reads, no dependency chain between them) - the script should batch/fire them in parallel rather than sequentially."}
+  - {transaction: "T2", steps: ["API-005"]}
+  - {transaction: "T3", steps: ["API-006", "API-007"]}
+notes:
+  - "T4 (Add item to cart) and T5 (Checkout and place order) were NOT discovered in this pass: both are write actions and Testsmith's authorisation to interact with/load-test the public site is not yet confirmed (see brd.yaml open_items #1 and #4). No login, add-to-cart or checkout request was made or observed. These remain open items - see open-items.md."
+  - "GET /users/me was observed returning 401 Unauthorized on every page load (guest/no session). It is a background auth-status check, not part of the T1-T3 business flows, so it is not listed as a catalogue API. Its actual auth mechanism (bearer token vs cookie) could not be confirmed without logging in, which was out of scope for this read-only, minimal discovery pass."
+  - "API-004 and API-005 use the HTTP method 'QUERY' (a relatively new method for safe, body-bearing reads). Confirmed by capturing ALL request types (not just xhr/fetch) during a repeat search: no separate OPTIONS preflight appears, so QUERY is the literal wire method, not a mislabelled preflight. tools/catalogue.py's method validator was extended (user decision, 2026-11-18) to accept QUERY alongside GET/POST/PUT/PATCH/DELETE/HEAD/OPTIONS."
+  - "On every page load, the site also calls https://practicesoftwaretesting.com/cdn-cgi/rum and https://practicesoftwaretesting.com/cdn-cgi/challenge-platform/... (same host as the static site, different purpose) and https://www.google-analytics.com/g/collect. These are Cloudflare RUM/bot-management and Google Analytics instrumentation, not application APIs, and are excluded from the catalogue. No CAPTCHA, block page, 429 or 503 was encountered during this discovery."
+  - "The site footer reads 'v2.5' while the page title and brd.yaml record 'v5.0' for the same page - a discrepancy observed, not resolved; flagging for awareness only."
+  - "meta.base_url was changed to http://localhost:8091 (2026-11-18, user decision) once the k6 run target moved from the public site to the test lead's own local Docker copy (see brd.yaml environment.target and open_items). All API entries above were discovered against the public site (https://api.practicesoftwaretesting.com) and each evidence.source still records that; the local copy's API has NOT been separately re-discovered or verified to match (same open item in brd.yaml) - it is assumed identical because it is described as a copy of the same application."

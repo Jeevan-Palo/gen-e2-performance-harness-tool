@@ -1,0 +1,35 @@
+# Copy to projects/<client>/<app>/api-catalogue.yaml. Never guess. Never store secrets (tokens, passwords, cookies, keys).
+meta:
+  application: ""
+  base_url: ""              # e.g. https://api.example.com
+  created: ""               # YYYY-MM-DD
+  brd_version: ""           # version of brd.yaml this was built against
+  excluded_hosts: []        # third-party hosts seen but NOT to be load tested (analytics, payment, CDN)
+apis:
+  - id: "API-001"           # unique
+    name: ""
+    method: "GET"           # GET | POST | PUT | PATCH | DELETE
+    path: "/example/{id}"   # template; replace ids with {name}
+    transaction: ""         # BRD transaction id, e.g. T1. Empty = not mapped yet
+    step_order: 1           # order inside the transaction
+    page: ""                # UI page/screen where it was seen
+    business_flow: ""       # what the user is doing
+    auth: "none"            # none | bearer | cookie | basic | other
+    headers: {}             # only non-secret headers, e.g. Content-Type, Accept
+    query_params: []        # [{name, example, required}]
+    request_body: {}        # {content_type, example, notes}; sensitive values as "<redacted>"
+    response: {}            # {status, content_type, fields: [top-level field names], notes}
+    dynamic_values: []      # correlation: [{name, from_api, json_path, used_in}]
+    depends_on: []          # ids of APIs that must run first
+    safe_to_load: "unknown" # yes | no | conditional | unknown
+    side_effects: ""        # none | creates data | sends email | takes payment | ...
+    test_data: ""           # what data/accounts this call needs
+    observed_latency_ms: null
+    evidence:
+      source_type: ""       # postman | openapi | document | browser | har
+      source: ""            # file name and place, or page URL
+      confidence: ""        # high | medium | low
+      observed_at: ""
+flows:                      # business flow = ordered API ids per BRD transaction
+  - {transaction: "", steps: []}
+notes: []

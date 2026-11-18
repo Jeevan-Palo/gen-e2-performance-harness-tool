@@ -1,0 +1,414 @@
+meta:
+  application: 'OrangeHRM Live (opensource-demo.orangehrmlive.com)'
+  excluded_hosts: []
+  created: '2026-11-18'
+  brd_version: '0.1'
+apis:
+- id: API-001
+  name: Submit login credentials
+  method: POST
+  path: /web/index.php/auth/validate
+  transaction: T1
+  step_order: 1
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/auth/login
+  business_flow: Submit username and password on the login form
+  auth: none
+  headers: {}
+  query_params: []
+  request_body:
+    content_type: application/x-www-form-urlencoded
+    notes: 'fields: _token (CSRF token), username, password'
+    example:
+      _token: <redacted>
+      username: <redacted>
+      password: <redacted>
+  response:
+    status: 302
+    notes: 302 redirect to /web/index.php/dashboard/index on success; sets a session cookie
+  dynamic_values: []
+  depends_on: []
+  safe_to_load: 'yes'
+  side_effects: Creates an authenticated session (session cookie); no business data created
+  test_data: A valid username/password (test account, not a real user)
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/auth/login
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-002
+  name: Dashboard action summary
+  method: GET
+  path: /web/index.php/api/v2/dashboard/employees/action-summary
+  transaction: T2
+  step_order: 1
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+  business_flow: Load the 'My Actions' dashboard widget
+  auth: cookie
+  headers: {}
+  query_params: []
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-003
+  name: Dashboard employee distribution by subunit
+  method: GET
+  path: /web/index.php/api/v2/dashboard/employees/subunit
+  transaction: T2
+  step_order: 2
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+  business_flow: Load the 'Employee Distribution by Sub Unit' widget
+  auth: cookie
+  headers: {}
+  query_params: []
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-004
+  name: Dashboard employee distribution by location
+  method: GET
+  path: /web/index.php/api/v2/dashboard/employees/locations
+  transaction: T2
+  step_order: 3
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+  business_flow: Load the 'Employee Distribution by Location' widget
+  auth: cookie
+  headers: {}
+  query_params: []
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-005
+  name: Dashboard time at work
+  method: GET
+  path: /web/index.php/api/v2/dashboard/employees/time-at-work
+  transaction: T2
+  step_order: 4
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+  business_flow: Load the 'Time at Work' dashboard widget
+  auth: cookie
+  headers: {}
+  query_params:
+  - name: timezoneOffset
+    example: '8'
+    required: true
+  - name: currentDate
+    example: '2026-11-18'
+    required: true
+  - name: currentTime
+    example: '16:06'
+    required: true
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-006
+  name: Dashboard quick-launch shortcuts
+  method: GET
+  path: /web/index.php/api/v2/dashboard/shortcuts
+  transaction: T2
+  step_order: 5
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+  business_flow: Load the 'Quick Launch' dashboard widget
+  auth: cookie
+  headers: {}
+  query_params: []
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-007
+  name: Buzz latest posts feed
+  method: GET
+  path: /web/index.php/api/v2/buzz/feed
+  transaction: T2
+  step_order: 6
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+  business_flow: Load the 'Buzz Latest Posts' dashboard widget
+  auth: cookie
+  headers: {}
+  query_params:
+  - name: limit
+    example: '5'
+    required: false
+  - name: offset
+    example: '0'
+    required: false
+  - name: sortOrder
+    example: DESC
+    required: false
+  - name: sortField
+    example: share.createdAtUtc
+    required: false
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-008
+  name: Dashboard employees on leave today
+  method: GET
+  path: /web/index.php/api/v2/dashboard/employees/leaves
+  transaction: T2
+  step_order: 7
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+  business_flow: Load the 'Employees on Leave Today' dashboard widget
+  auth: cookie
+  headers: {}
+  query_params:
+  - name: date
+    example: '2026-11-18'
+    required: true
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/dashboard/index
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-009
+  name: Employee list
+  method: GET
+  path: /web/index.php/api/v2/pim/employees
+  transaction: T3
+  step_order: 1
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList
+  business_flow: View the employee list in the PIM module
+  auth: cookie
+  headers: {}
+  query_params:
+  - name: limit
+    example: '50'
+    required: false
+  - name: offset
+    example: '0'
+    required: false
+  - name: model
+    example: detailed
+    required: false
+  - name: includeEmployees
+    example: onlyCurrent
+    required: false
+  - name: sortField
+    example: employee.firstName
+    required: false
+  - name: sortOrder
+    example: ASC
+    required: false
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-010
+  name: Employment statuses lookup
+  method: GET
+  path: /web/index.php/api/v2/admin/employment-statuses
+  transaction: T3
+  step_order: 2
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList
+  business_flow: Load the employment-status filter dropdown on the employee list
+  auth: cookie
+  headers: {}
+  query_params:
+  - name: limit
+    example: '0'
+    required: false
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-011
+  name: Sub-units lookup
+  method: GET
+  path: /web/index.php/api/v2/admin/subunits
+  transaction: T3
+  step_order: 3
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList
+  business_flow: Load the sub-unit filter dropdown on the employee list
+  auth: cookie
+  headers: {}
+  query_params: []
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-012
+  name: Job titles lookup
+  method: GET
+  path: /web/index.php/api/v2/admin/job-titles
+  transaction: T3
+  step_order: 4
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList
+  business_flow: Load the job-title filter dropdown on the employee list
+  auth: cookie
+  headers: {}
+  query_params:
+  - name: limit
+    example: '0'
+    required: false
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/pim/viewEmployeeList
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+- id: API-013
+  name: Employee directory
+  method: GET
+  path: /web/index.php/api/v2/directory/employees
+  transaction: T4
+  step_order: 1
+  page: https://opensource-demo.orangehrmlive.com/web/index.php/directory/viewDirectory
+  business_flow: Browse the employee directory
+  auth: cookie
+  headers: {}
+  query_params:
+  - name: limit
+    example: '14'
+    required: false
+  - name: offset
+    example: '0'
+    required: false
+  request_body: {}
+  response:
+    status: 200
+  dynamic_values: []
+  depends_on:
+  - API-001
+  safe_to_load: 'yes'
+  side_effects: none
+  test_data: ''
+  observed_latency_ms: null
+  evidence:
+    source: https://opensource-demo.orangehrmlive.com/web/index.php/directory/viewDirectory
+    confidence: high
+    source_type: browser
+    observed_at: '2026-11-18'
+flows:
+- {transaction: "T1", steps: ["API-001"]}
+- {transaction: "T2", steps: ["API-002", "API-003", "API-004", "API-005", "API-006", "API-007", "API-008"]}
+- {transaction: "T3", steps: ["API-009", "API-010", "API-011", "API-012"]}
+- {transaction: "T4", steps: ["API-013"]}
+notes:
+- "API-001 (login) requires a per-session _token (CSRF) read from a hidden field on the login page HTML itself, not from another API response - must GET the login page first to extract it before POSTing to /auth/validate."
+- "core/i18n/messages and events/push same-host calls were seen but excluded: they are app bootstrap/telemetry, not business transactions."
+- "Write flows (Apply Leave, Add Employee, Record Claim, etc.) were not discovered - read-only browser discovery only, per api-discovery-browser safety rules."
+- "meta.base_url is intentionally left empty here; the run target comes from environments.yaml (active environment 'demo'). NOTE: environments.yaml demo.base_url is currently a full page path (/web/index.php/auth/login), not a bare origin - flagged to the user for confirmation before the k6 script step."

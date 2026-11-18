@@ -1,0 +1,13 @@
+# Neutral test fixture only. Used to check that tools/brd.py finds gaps. Not a real project.
+meta: {client: "Example Client", application: "example-app", version: "0.1", date: "2026-01-01", brd_owner: "A. Owner, Product Manager", prepared_by: "", status: "Draft"}
+purpose: "New release going live; system must stay responsive at peak."
+scope_in: ["Journey A", "Journey B"]
+transactions:
+  - {id: "T1", name: "Transaction one", user_type: "registered", criticality: "High", traffic_share: "", measure_start_end: "", notes: ""}
+workload: {peak_concurrent_users: "1,000 (sitewide or per transaction?)", peak_window: "", think_time: "", basis: ""}
+requirements:
+  - {id: "PR-01", transaction: "T1", metric: "Response time", target: "2 s", percentile: "", load_condition: "", priority: "Must"}
+test_types:
+  - {type: "Load", needed: "yes", notes: ""}
+abort_conditions:
+  - {condition: "Error rate", threshold: "> 5% for 2 min", action: ""}

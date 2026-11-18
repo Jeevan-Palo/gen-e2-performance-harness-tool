@@ -1,0 +1,38 @@
+# Environments for this project. Switch with: python tools/envconf.py use projects/ToolShop/practicesoftwaretesting <name>
+# NEVER put passwords, tokens or keys here. List only the NAMES of the environment variables that hold them.
+active: local
+environments:
+  local:
+    description: Local Docker copy of Practice Software Testing (Toolshop), run by the test lead
+    type: local
+    base_url: "http://localhost:8091"
+    owner: "Test lead (runs and owns the local Docker copy)"
+    authorisation: not_required
+    authorisation_note: "Own private copy on the test lead's machine; no third party involved"
+    max_vus: 50
+    max_run_minutes: 20
+    test_windows: "Any time, chosen by the test lead"
+    monitoring: {source: none, detail: "To be decided how CPU and memory of the local containers are collected"}
+    comparison_with_production: "Not applicable: practice project, no production system"
+    third_party_services: "None called by the tests"
+    test_data: "Seeded demo data of the local copy; synthetic data only"
+    credentials_env_vars: []
+    known_differences: "Not yet compared with the public site (the catalogue was built from the public site)"
+    verified: {date: "2026-11-18", by: "Test lead", note: "7 catalogue calls returned 200 on the local copy via curl; status codes only, response shapes not compared"}
+  public:
+    description: Public Practice Software Testing site (third-party hosted, behind a CDN)
+    type: public
+    base_url: "https://api.practicesoftwaretesting.com"
+    owner: "Testsmith (publisher of Practice Software Testing)"
+    authorisation: not_confirmed
+    authorisation_note: ""
+    max_vus: 5
+    max_run_minutes: 10
+    test_windows: "Not agreed"
+    monitoring: {source: none, detail: "No server-side access; client-side k6 metrics only"}
+    comparison_with_production: "Not applicable: this is the only instance"
+    third_party_services: "CDN/WAF in front; Google Analytics beacons excluded from the catalogue"
+    test_data: "Whatever exists on the public site; no data created"
+    credentials_env_vars: []
+    known_differences: "The catalogue was discovered here"
+    verified: {date: "2026-11-18", by: "Test lead", note: "T1-T3 calls captured in the browser; smoke run passed"}
