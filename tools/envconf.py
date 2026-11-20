@@ -42,7 +42,13 @@ def problems(cfg):
         if blank(e.get("owner")): P.append(f"{n}: owner is empty")
         for k in ("max_vus", "max_run_minutes"):
             if not isinstance(e.get(k), int) or e.get(k) <= 0: P.append(f"{n}: {k} must be a positive whole number")
-        if (e.get("monitoring") or {}).get("source") not in MON: P.append(f"{n}: monitoring.source must be one of {sorted(MON)}")
+        mon = e.get("monitoring") or {}
+        if mon.get("source") not in MON: P.append(f"{n}: monitoring.source must be one of {sorted(MON)}")
+        if mon.get("source") == "docker_stats":
+            cs = mon.get("containers")
+            if not isinstance(cs, list) or not cs or not all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", str(c)) for c in cs): P.append(f"{n}: monitoring.containers must be a list of container names for docker_stats")
+            iv = mon.get("interval_seconds", 5)
+            if not isinstance(iv, int) or not 2 <= iv <= 60: P.append(f"{n}: monitoring.interval_seconds must be a whole number from 2 to 60")
         if e.get("authorisation") == "accepted_by_test_lead" and blank(e.get("authorisation_note")):
             P.append(f"{n}: accepted_by_test_lead needs an authorisation_note (the test lead's own statement and date)")
         if e.get("authorisation") == "not_required" and e.get("type") in ("public", "production"):

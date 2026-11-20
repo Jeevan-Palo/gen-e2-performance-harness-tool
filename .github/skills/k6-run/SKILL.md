@@ -8,6 +8,7 @@ description: Run the project's k6 script safely (smoke first, then load at the u
 Always run through `tools/runk6.py`. Never call `k6 run` directly. The wrapper checks the script, enforces the guards, records the run and saves the results in `projects/<client>/<app>/runs/<run-id>/`.
 
 ## Preflight
+0. If the active environment's monitoring source is `docker_stats`, run `python tools/monitor.py check projects/<client>/<app>` first. If it reports a problem, tell the user and stop unless they say to continue without monitoring.
 1. Run `k6 version`. If k6 is not installed, tell the user, show the install command for their OS (macOS: `brew install k6`), run it only through the terminal so the user can approve it, and re-check. Install nothing else without asking.
 2. `python tools/envconf.py check`, `python tools/brd.py check`, `python tools/catalogue.py check` and `python tools/k6check.py` for the project must pass. Tell the user which environment is active (`python tools/envconf.py show <project>`) before running. If not, stop and tell the user.
 
@@ -21,8 +22,9 @@ Always run through `tools/runk6.py`. Never call `k6 run` directly. The wrapper c
    - `thresholds_failed`: the run finished but a requirement was missed. List which thresholds.
    - `aborted_by_threshold`: a safety rule stopped the run early (error rate, slow responses, or 429/503/CDN block). Say which, and do NOT re-run automatically.
    - `error`: the script or k6 failed. Show the last lines of `k6-output.txt`.
-5. Ask the user before any further run. A bigger run only happens when the user asks for it.
-6. Update `STATE.md` (stage "8. Run", latest run id and outcome).
+5. Load runs also save `dashboard.html` (k6 charts) in the run folder; during a run it is live at http://localhost:5665. `runk6.py` also builds `report.html` automatically after every run, including aborted ones (see the `REPORT:` line). Give the user the report path; pass `--open` only if the user asks to have it opened in the browser.
+6. Ask the user before any further run. A bigger run only happens when the user asks for it.
+7. Update `STATE.md` (stage "8. Run", latest run id and outcome).
 
 ## Rules
 - Never use `--force-step` unless the user explicitly approves that exact jump in this chat.

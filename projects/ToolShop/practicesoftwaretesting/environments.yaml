@@ -12,7 +12,7 @@ environments:
     max_vus: 50
     max_run_minutes: 20
     test_windows: "Any time, chosen by the test lead"
-    monitoring: {source: none, detail: "To be decided how CPU and memory of the local containers are collected"}
+    monitoring: {source: docker_stats, detail: "CPU and memory of the ToolShop API, web server and database containers, sampled with docker stats", containers: [pst-laravel-api-1, pst-web-1, pst-mariadb-1], interval_seconds: 5}
     comparison_with_production: "Not applicable: practice project, no production system"
     third_party_services: "None called by the tests"
     test_data: "Seeded demo data of the local copy; synthetic data only"

@@ -89,7 +89,7 @@ Out of scope: T4 - Add item to cart: not discovered; write actions, deferred to 
 | Third-party services | None called by the tests |
 | Test data needs | Seeded demo data of the local copy; synthetic data only |
 | No real personal or payment data (confirmation) | No real personal or payment data will be used; all names, emails, addresses and card details will be made-up test values. Checkout will use only dummy payment details the site allows for practice (not yet verified whether it accepts them). This confirmation is the test lead's own statement and has not been independently checked. |
-| Monitoring access | none: To be decided how CPU and memory of the local containers are collected |
+| Monitoring access | docker_stats: CPU and memory of the ToolShop API, web server and database containers, sampled with docker stats |
 | Allowed test windows | Any time, chosen by the test lead |
 
 ## 9. Test stop (abort) conditions
@@ -100,7 +100,7 @@ Agree these with the operations team before the test is approved.
 |---|---|---|
 | Error rate | Above 2% for 1 minute | Stop the run and review |
 | Response time | p95 above 3x the target of the affected transaction for 2 minutes | Stop the run |
-| Server health | Any HTTP 429, 503, or a CDN/firewall block or challenge page (CPU/memory not observable in this environment) | Stop immediately |
+| Server health | Any HTTP 429 or 503 response (stopped automatically by the script). CPU and memory are recorded for the report but do not stop the run automatically. | Stop immediately |
 | Impact on other systems or users | Any sign: slowdown reports, owner notice, or unusual responses | Stop immediately |
 | Request from operations or environment owner | Any time | Stop immediately |
 
@@ -137,7 +137,7 @@ The test is accepted when:
 | # | Question | Owner | Due | Status |
 |---|---|---|---|---|
 | 1 | Resolved for now: load runs target the test lead's own local Docker copy instead of the public site, so Testsmith's authorisation is not needed for this phase. Revisit only if testing against the public site is wanted again. | Test lead | [NOT PROVIDED] | Resolved |
-| 2 | Base URL confirmed (http://localhost:8091). Still open: confirm that the local Docker copy's REST API matches api-catalogue.yaml (built from discovery against the public site, same paths/methods incl. QUERY) before relying on its results. | Test lead | [NOT PROVIDED] | Open |
+| 2 | Base URL confirmed (http://localhost:8091). Closed: the local Docker copy's REST API was checked against api-catalogue.yaml (built from discovery against the public site, same paths/methods incl. QUERY). Reason: 7 calls returned 200, status codes only; response shapes not compared. | Test lead | [NOT PROVIDED] | Closed |
 | 3 | Confirm how many test accounts are available and whether one account can be used by several virtual users at once. | Test lead | [NOT PROVIDED] | Open |
 | 4 | Whether the site's checkout accepts dummy/test payment details for practice has not been verified. | Test lead | [NOT PROVIDED] | Open |
 | 5 | Which further test types (stress, spike, soak, scalability) are needed in addition to Baseline and Load, which are confirmed as yes? | Test lead | [NOT PROVIDED] | Open |

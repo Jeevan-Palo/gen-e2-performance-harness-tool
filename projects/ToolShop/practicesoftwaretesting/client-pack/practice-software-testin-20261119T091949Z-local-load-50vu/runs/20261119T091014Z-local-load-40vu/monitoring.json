@@ -1,0 +1,1417 @@
+{
+ "source": "docker_stats",
+ "status": "collected",
+ "containers": [
+  "pst-laravel-api-1",
+  "pst-web-1",
+  "pst-mariadb-1"
+ ],
+ "interval_seconds": 5,
+ "start_utc": "2026-11-19T09:10:16Z",
+ "end_utc": "2026-11-19T09:14:18Z",
+ "duration_s": 241.8,
+ "steady_window_s": [
+  30,
+  210
+ ],
+ "cpu_note": "CPU % follows Docker: 100% = one full core",
+ "errors": [],
+ "summary": {
+  "k6 (load generator)": {
+   "samples": 47,
+   "steady_samples": 36,
+   "cpu_avg": 4.2,
+   "cpu_p95": 4.7,
+   "cpu_max_run": 5.0,
+   "mem_avg_mib": 56.3,
+   "mem_max_mib": 63.9
+  },
+  "pst-laravel-api-1": {
+   "samples": 49,
+   "steady_samples": 36,
+   "cpu_avg": 39.4,
+   "cpu_p95": 46.3,
+   "cpu_max_run": 48.4,
+   "mem_avg_mib": 73.5,
+   "mem_max_mib": 78.1
+  },
+  "pst-mariadb-1": {
+   "samples": 49,
+   "steady_samples": 36,
+   "cpu_avg": 0.0,
+   "cpu_p95": 0.1,
+   "cpu_max_run": 1.0,
+   "mem_avg_mib": 107.3,
+   "mem_max_mib": 107.3
+  },
+  "pst-web-1": {
+   "samples": 49,
+   "steady_samples": 36,
+   "cpu_avg": 1.4,
+   "cpu_p95": 1.7,
+   "cpu_max_run": 1.8,
+   "mem_avg_mib": 14.6,
+   "mem_max_mib": 14.8
+  }
+ },
+ "samples": [
+  {
+   "t_s": 2.0,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 5.99,
+   "mem_mib": 71.33,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 2.0,
+   "series": "pst-web-1",
+   "cpu_pct": 0.32,
+   "mem_mib": 13.86,
+   "mem_pct": 0.18
+  },
+  {
+   "t_s": 2.0,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.72,
+   "mem_mib": 107.2,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 7.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 11.19,
+   "mem_mib": 71.84,
+   "mem_pct": 0.92
+  },
+  {
+   "t_s": 7.6,
+   "series": "pst-web-1",
+   "cpu_pct": 0.46,
+   "mem_mib": 13.9,
+   "mem_pct": 0.18
+  },
+  {
+   "t_s": 7.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.32,
+   "mem_mib": 107.2,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 7.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 1.1,
+   "mem_mib": 44.42,
+   "mem_pct": null
+  },
+  {
+   "t_s": 11.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 18.85,
+   "mem_mib": 71.52,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 11.6,
+   "series": "pst-web-1",
+   "cpu_pct": 0.82,
+   "mem_mib": 14.01,
+   "mem_pct": 0.18
+  },
+  {
+   "t_s": 11.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 1.04,
+   "mem_mib": 107.2,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 11.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 2.2,
+   "mem_mib": 46.8,
+   "mem_pct": null
+  },
+  {
+   "t_s": 17.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 24.1,
+   "mem_mib": 71.76,
+   "mem_pct": 0.92
+  },
+  {
+   "t_s": 17.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.11,
+   "mem_mib": 14.16,
+   "mem_pct": 0.18
+  },
+  {
+   "t_s": 17.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.51,
+   "mem_mib": 107.2,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 17.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 2.5,
+   "mem_mib": 49.06,
+   "mem_pct": null
+  },
+  {
+   "t_s": 21.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 18.39,
+   "mem_mib": 71.98,
+   "mem_pct": 0.92
+  },
+  {
+   "t_s": 21.6,
+   "series": "pst-web-1",
+   "cpu_pct": 0.86,
+   "mem_mib": 14.5,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 21.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.18,
+   "mem_mib": 107.2,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 21.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.7,
+   "mem_mib": 50.98,
+   "mem_pct": null
+  },
+  {
+   "t_s": 27.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 28.15,
+   "mem_mib": 71.28,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 27.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.16,
+   "mem_mib": 14.42,
+   "mem_pct": 0.18
+  },
+  {
+   "t_s": 27.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.29,
+   "mem_mib": 107.2,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 27.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.0,
+   "mem_mib": 53.27,
+   "mem_pct": null
+  },
+  {
+   "t_s": 31.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 30.4,
+   "mem_mib": 71.3,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 31.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.16,
+   "mem_mib": 14.51,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 31.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.11,
+   "mem_mib": 107.2,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 31.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.5,
+   "mem_mib": 55.31,
+   "mem_pct": null
+  },
+  {
+   "t_s": 37.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 48.42,
+   "mem_mib": 74.58,
+   "mem_pct": 0.95
+  },
+  {
+   "t_s": 37.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.83,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 37.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.26,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 37.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.7,
+   "mem_mib": 60.5,
+   "mem_pct": null
+  },
+  {
+   "t_s": 41.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 33.75,
+   "mem_mib": 71.88,
+   "mem_pct": 0.92
+  },
+  {
+   "t_s": 41.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.14,
+   "mem_mib": 14.56,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 41.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 41.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.7,
+   "mem_mib": 61.72,
+   "mem_pct": null
+  },
+  {
+   "t_s": 47.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 35.68,
+   "mem_mib": 72.41,
+   "mem_pct": 0.92
+  },
+  {
+   "t_s": 47.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.37,
+   "mem_mib": 14.57,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 47.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.11,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 47.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.2,
+   "mem_mib": 62.33,
+   "mem_pct": null
+  },
+  {
+   "t_s": 51.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 34.58,
+   "mem_mib": 71.31,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 51.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.24,
+   "mem_mib": 14.55,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 51.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 51.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.0,
+   "mem_mib": 62.83,
+   "mem_pct": null
+  },
+  {
+   "t_s": 57.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 43.38,
+   "mem_mib": 75.03,
+   "mem_pct": 0.96
+  },
+  {
+   "t_s": 57.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.01,
+   "mem_mib": 14.55,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 57.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 57.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.7,
+   "mem_mib": 63.06,
+   "mem_pct": null
+  },
+  {
+   "t_s": 61.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 37.94,
+   "mem_mib": 71.91,
+   "mem_pct": 0.92
+  },
+  {
+   "t_s": 61.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.29,
+   "mem_mib": 14.55,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 61.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.03,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 61.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.0,
+   "mem_mib": 63.19,
+   "mem_pct": null
+  },
+  {
+   "t_s": 67.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 44.53,
+   "mem_mib": 71.68,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 67.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.26,
+   "mem_mib": 14.53,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 67.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.03,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 67.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.4,
+   "mem_mib": 62.61,
+   "mem_pct": null
+  },
+  {
+   "t_s": 71.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 35.03,
+   "mem_mib": 71.44,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 71.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.25,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 71.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 71.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.5,
+   "mem_mib": 63.33,
+   "mem_pct": null
+  },
+  {
+   "t_s": 77.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 45.87,
+   "mem_mib": 76.96,
+   "mem_pct": 0.98
+  },
+  {
+   "t_s": 77.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.59,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 77.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 77.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.3,
+   "mem_mib": 63.61,
+   "mem_pct": null
+  },
+  {
+   "t_s": 81.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 46.28,
+   "mem_mib": 76.41,
+   "mem_pct": 0.97
+  },
+  {
+   "t_s": 81.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.58,
+   "mem_mib": 14.77,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 81.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 81.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.2,
+   "mem_mib": 63.64,
+   "mem_pct": null
+  },
+  {
+   "t_s": 87.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 37.36,
+   "mem_mib": 74.93,
+   "mem_pct": 0.96
+  },
+  {
+   "t_s": 87.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.83,
+   "mem_mib": 14.54,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 87.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 87.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.7,
+   "mem_mib": 63.89,
+   "mem_pct": null
+  },
+  {
+   "t_s": 91.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 41.86,
+   "mem_mib": 71.59,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 91.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.63,
+   "mem_mib": 14.55,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 91.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 91.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.4,
+   "mem_mib": 55.44,
+   "mem_pct": null
+  },
+  {
+   "t_s": 97.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 42.58,
+   "mem_mib": 72.07,
+   "mem_pct": 0.92
+  },
+  {
+   "t_s": 97.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.45,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 97.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 97.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.7,
+   "mem_mib": 48.3,
+   "mem_pct": null
+  },
+  {
+   "t_s": 101.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 39.97,
+   "mem_mib": 71.52,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 101.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.3,
+   "mem_mib": 14.54,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 101.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 101.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 5.0,
+   "mem_mib": 51.77,
+   "mem_pct": null
+  },
+  {
+   "t_s": 107.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 45.5,
+   "mem_mib": 71.32,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 107.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.68,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 107.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 107.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.2,
+   "mem_mib": 52.0,
+   "mem_pct": null
+  },
+  {
+   "t_s": 111.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 27.33,
+   "mem_mib": 71.08,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 111.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.16,
+   "mem_mib": 14.54,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 111.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.03,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 111.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.2,
+   "mem_mib": 50.52,
+   "mem_pct": null
+  },
+  {
+   "t_s": 117.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 35.19,
+   "mem_mib": 73.9,
+   "mem_pct": 0.94
+  },
+  {
+   "t_s": 117.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.16,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 117.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 117.6,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.7,
+   "mem_mib": 53.06,
+   "mem_pct": null
+  },
+  {
+   "t_s": 121.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 22.04,
+   "mem_mib": 71.3,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 121.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.12,
+   "mem_mib": 14.54,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 121.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 121.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.7,
+   "mem_mib": 53.2,
+   "mem_pct": null
+  },
+  {
+   "t_s": 127.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 44.97,
+   "mem_mib": 78.13,
+   "mem_pct": 1.0
+  },
+  {
+   "t_s": 127.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.53,
+   "mem_mib": 14.56,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 127.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 127.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.7,
+   "mem_mib": 53.31,
+   "mem_pct": null
+  },
+  {
+   "t_s": 131.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 29.41,
+   "mem_mib": 74.41,
+   "mem_pct": 0.95
+  },
+  {
+   "t_s": 131.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.05,
+   "mem_mib": 14.55,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 131.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 131.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.5,
+   "mem_mib": 53.89,
+   "mem_pct": null
+  },
+  {
+   "t_s": 137.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 42.19,
+   "mem_mib": 74.02,
+   "mem_pct": 0.94
+  },
+  {
+   "t_s": 137.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.2,
+   "mem_mib": 14.53,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 137.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 137.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.8,
+   "mem_mib": 53.97,
+   "mem_pct": null
+  },
+  {
+   "t_s": 141.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 38.3,
+   "mem_mib": 76.71,
+   "mem_pct": 0.98
+  },
+  {
+   "t_s": 141.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.35,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 141.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 141.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.2,
+   "mem_mib": 54.06,
+   "mem_pct": null
+  },
+  {
+   "t_s": 147.6,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 41.49,
+   "mem_mib": 71.6,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 147.6,
+   "series": "pst-web-1",
+   "cpu_pct": 1.63,
+   "mem_mib": 14.53,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 147.6,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 147.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.7,
+   "mem_mib": 54.2,
+   "mem_pct": null
+  },
+  {
+   "t_s": 151.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 42.28,
+   "mem_mib": 74.98,
+   "mem_pct": 0.96
+  },
+  {
+   "t_s": 151.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.43,
+   "mem_mib": 14.67,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 151.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.03,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 151.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.5,
+   "mem_mib": 54.31,
+   "mem_pct": null
+  },
+  {
+   "t_s": 157.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 39.74,
+   "mem_mib": 71.31,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 157.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.1,
+   "mem_mib": 14.53,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 157.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 157.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.8,
+   "mem_mib": 54.05,
+   "mem_pct": null
+  },
+  {
+   "t_s": 161.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 45.78,
+   "mem_mib": 76.9,
+   "mem_pct": 0.98
+  },
+  {
+   "t_s": 161.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.53,
+   "mem_mib": 14.54,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 161.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 161.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.5,
+   "mem_mib": 54.31,
+   "mem_pct": null
+  },
+  {
+   "t_s": 167.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 42.8,
+   "mem_mib": 71.55,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 167.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.58,
+   "mem_mib": 14.54,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 167.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 167.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.4,
+   "mem_mib": 53.7,
+   "mem_pct": null
+  },
+  {
+   "t_s": 171.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 46.33,
+   "mem_mib": 74.29,
+   "mem_pct": 0.95
+  },
+  {
+   "t_s": 171.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.55,
+   "mem_mib": 14.54,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 171.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 171.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.7,
+   "mem_mib": 53.06,
+   "mem_pct": null
+  },
+  {
+   "t_s": 177.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 37.09,
+   "mem_mib": 74.02,
+   "mem_pct": 0.94
+  },
+  {
+   "t_s": 177.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.28,
+   "mem_mib": 14.53,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 177.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 177.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.0,
+   "mem_mib": 53.84,
+   "mem_pct": null
+  },
+  {
+   "t_s": 181.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 38.67,
+   "mem_mib": 71.53,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 181.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.24,
+   "mem_mib": 14.82,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 181.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 181.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.2,
+   "mem_mib": 53.88,
+   "mem_pct": null
+  },
+  {
+   "t_s": 187.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 42.39,
+   "mem_mib": 77.25,
+   "mem_pct": 0.99
+  },
+  {
+   "t_s": 187.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.52,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 187.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 187.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.0,
+   "mem_mib": 53.0,
+   "mem_pct": null
+  },
+  {
+   "t_s": 191.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 34.08,
+   "mem_mib": 71.25,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 191.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.08,
+   "mem_mib": 14.57,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 191.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 191.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.2,
+   "mem_mib": 53.33,
+   "mem_pct": null
+  },
+  {
+   "t_s": 197.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 45.73,
+   "mem_mib": 74.27,
+   "mem_pct": 0.95
+  },
+  {
+   "t_s": 197.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.52,
+   "mem_mib": 14.84,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 197.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 197.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.2,
+   "mem_mib": 53.33,
+   "mem_pct": null
+  },
+  {
+   "t_s": 201.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 41.51,
+   "mem_mib": 76.11,
+   "mem_pct": 0.97
+  },
+  {
+   "t_s": 201.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.29,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 201.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 201.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.2,
+   "mem_mib": 54.25,
+   "mem_pct": null
+  },
+  {
+   "t_s": 207.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 38.52,
+   "mem_mib": 74.03,
+   "mem_pct": 0.94
+  },
+  {
+   "t_s": 207.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.44,
+   "mem_mib": 14.55,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 207.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 207.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 4.0,
+   "mem_mib": 54.36,
+   "mem_pct": null
+  },
+  {
+   "t_s": 211.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 43.58,
+   "mem_mib": 73.82,
+   "mem_pct": 0.94
+  },
+  {
+   "t_s": 211.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.57,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 211.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 211.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.7,
+   "mem_mib": 54.33,
+   "mem_pct": null
+  },
+  {
+   "t_s": 217.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 36.89,
+   "mem_mib": 76.19,
+   "mem_pct": 0.97
+  },
+  {
+   "t_s": 217.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.2,
+   "mem_mib": 14.56,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 217.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 217.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 3.7,
+   "mem_mib": 53.94,
+   "mem_pct": null
+  },
+  {
+   "t_s": 221.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 15.8,
+   "mem_mib": 73.82,
+   "mem_pct": 0.94
+  },
+  {
+   "t_s": 221.7,
+   "series": "pst-web-1",
+   "cpu_pct": 0.57,
+   "mem_mib": 14.51,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 221.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 221.8,
+   "series": "k6 (load generator)",
+   "cpu_pct": 2.7,
+   "mem_mib": 54.34,
+   "mem_pct": null
+  },
+  {
+   "t_s": 227.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 20.45,
+   "mem_mib": 71.3,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 227.7,
+   "series": "pst-web-1",
+   "cpu_pct": 0.83,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 227.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 227.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 2.8,
+   "mem_mib": 54.16,
+   "mem_pct": null
+  },
+  {
+   "t_s": 231.8,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 16.07,
+   "mem_mib": 71.38,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 231.8,
+   "series": "pst-web-1",
+   "cpu_pct": 0.69,
+   "mem_mib": 14.51,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 231.8,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 231.8,
+   "series": "k6 (load generator)",
+   "cpu_pct": 2.2,
+   "mem_mib": 54.22,
+   "mem_pct": null
+  },
+  {
+   "t_s": 237.7,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 2.96,
+   "mem_mib": 71.25,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 237.7,
+   "series": "pst-web-1",
+   "cpu_pct": 1.18,
+   "mem_mib": 14.52,
+   "mem_pct": 0.19
+  },
+  {
+   "t_s": 237.7,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  },
+  {
+   "t_s": 237.7,
+   "series": "k6 (load generator)",
+   "cpu_pct": 1.7,
+   "mem_mib": 54.58,
+   "mem_pct": null
+  },
+  {
+   "t_s": 241.8,
+   "series": "pst-laravel-api-1",
+   "cpu_pct": 0.01,
+   "mem_mib": 71.02,
+   "mem_pct": 0.91
+  },
+  {
+   "t_s": 241.8,
+   "series": "pst-web-1",
+   "cpu_pct": 0.71,
+   "mem_mib": 13.89,
+   "mem_pct": 0.18
+  },
+  {
+   "t_s": 241.8,
+   "series": "pst-mariadb-1",
+   "cpu_pct": 0.02,
+   "mem_mib": 107.3,
+   "mem_pct": 1.37
+  }
+ ]
+}

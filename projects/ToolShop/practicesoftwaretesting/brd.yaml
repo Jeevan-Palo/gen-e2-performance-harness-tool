@@ -76,7 +76,7 @@ environment:
 abort_conditions:
 - {condition: "Error rate", threshold: "Above 2% for 1 minute", action: "Stop the run and review"}
 - {condition: "Response time", threshold: "p95 above 3x the target of the affected transaction for 2 minutes", action: "Stop the run"}
-- {condition: "Server health", threshold: "Any HTTP 429, 503, or a CDN/firewall block or challenge page (CPU/memory not observable in this environment)", action: "Stop immediately"}
+- {condition: "Server health", threshold: "Any HTTP 429 or 503 response (stopped automatically by the script). CPU and memory are recorded for the report but do not stop the run automatically.", action: "Stop immediately"}
 - {condition: "Impact on other systems or users", threshold: "Any sign: slowdown reports, owner notice, or unusual responses", action: "Stop immediately"}
 - {condition: "Request from operations or environment owner", threshold: "Any time", action: "Stop immediately"}
 monitoring_reporting:
@@ -101,10 +101,10 @@ open_items:
   owner: Test lead
   due: ''
   status: Resolved
-- question: 'Base URL confirmed (http://localhost:8091). Still open: confirm that the local Docker copy''s REST API matches api-catalogue.yaml (built from discovery against the public site, same paths/methods incl. QUERY) before relying on its results.'
+- question: 'Base URL confirmed (http://localhost:8091). Closed: the local Docker copy''s REST API was checked against api-catalogue.yaml (built from discovery against the public site, same paths/methods incl. QUERY). Reason: 7 calls returned 200, status codes only; response shapes not compared.'
   owner: Test lead
   due: ''
-  status: Open
+  status: Closed
 - question: Confirm how many test accounts are available and whether one account can be used by several virtual users at once.
   owner: Test lead
   due: ''

@@ -14,6 +14,8 @@ environments:
     max_run_minutes: 20
     test_windows: ""
     monitoring: {source: none, detail: ""}    # docker_stats | azure | dynatrace | client_apm | none
+    # docker_stats example: {source: docker_stats, detail: "CPU and memory of the app containers", containers: [app-api-1, app-db-1], interval_seconds: 5}
+    # azure, dynatrace, client_apm: collectors not built yet
     comparison_with_production: ""
     third_party_services: ""
     test_data: ""                    # accounts and data needed here (no credentials)

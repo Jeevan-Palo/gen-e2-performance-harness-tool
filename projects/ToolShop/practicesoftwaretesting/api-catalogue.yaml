@@ -99,11 +99,12 @@ apis:
     query_params: []
     request_body: {content_type: "application/json", example: {q: "Hammer"}, notes: "Sent as an HTTP QUERY request (method literally 'QUERY'). Tested with keyword 'Hammer' -> 6 results."}
     response: {status: 200, content_type: "application/json", fields: ["current_page", "data"], notes: "Same product shape as API-004."}
-    dynamic_values: []
-    depends_on: []
+    dynamic_values:
+      - {name: "search.term", from_api: "API-004", json_path: "data[].name", used_in: "request body q in QUERY /products/search", notes: "First word of each name, at least 3 characters, deduplicated (case-insensitive), from API-004 pages 1-5 read in setup(); one term picked at random per iteration."}
+    depends_on: ["API-004"]
     safe_to_load: "yes"
     side_effects: "none"
-    test_data: "Search keyword only; 'Hammer' used during discovery, chosen because it is a real catalogue term, not sensitive data"
+    test_data: "Search terms are dynamic: first word (3+ characters, deduplicated) of each product name returned by API-004 pages 1-5 in setup(). 'Hammer' (used during discovery, a real catalogue term) is no longer a fixed value; it is only the example in request_body."
     observed_latency_ms: null
     evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/ - search for 'Hammer', network capture", confidence: "medium", observed_at: "2026-11-18"}
   - id: "API-006"
@@ -120,12 +121,11 @@ apis:
     request_body: {}
     response: {status: 200, content_type: "application/json", fields: ["id", "name", "description", "price", "is_location_offer", "is_rental", "co2_rating", "in_stock", "is_eco_friendly", "product_image", "category", "brand"], notes: "Body capture truncated at 1500 chars; 'brand' field present but cut off, not fully confirmed beyond the id/name seen elsewhere."}
     dynamic_values:
-      - {name: "product.id", from_api: "API-004", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}"}
-      - {name: "product.id", from_api: "API-005", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}"}
-    depends_on: ["API-004", "API-005"]
+      - {name: "product.id", from_api: "API-004", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}", notes: "Ids from API-004 pages 1-5 read in setup() (stops at the first empty page); one id picked at random per iteration."}
+    depends_on: ["API-004"]
     safe_to_load: "yes"
     side_effects: "none"
-    test_data: "Product id from the listing/search response"
+    test_data: "Product ids are dynamic: collected from API-004 pages 1-5 in setup() (not fixed in the catalogue), with the same price/is_rental filters as the T1 listing."
     observed_latency_ms: null
     evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/product/01M7P2PECT1X0BN3BM389H891Z - network capture", confidence: "medium", observed_at: "2026-11-18"}
   - id: "API-007"
@@ -143,11 +143,10 @@ apis:
     response: {status: 200, content_type: "application/json", fields: ["id", "name", "description", "price", "is_location_offer", "is_rental", "in_stock", "is_eco_friendly", "product_image", "category", "brand"], notes: "Array of product summaries, same category as the viewed product."}
     dynamic_values:
       - {name: "product.id", from_api: "API-004", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}/related"}
-      - {name: "product.id", from_api: "API-005", json_path: "data[].id", used_in: "path parameter {id} in GET /products/{id}/related"}
-    depends_on: ["API-006", "API-004", "API-005"]
+    depends_on: ["API-006", "API-004"]
     safe_to_load: "yes"
     side_effects: "none"
-    test_data: "Product id from the listing/search response"
+    test_data: "Product id collected from API-004 pages 1 to 5 during setup"
     observed_latency_ms: null
     evidence: {source_type: "browser", source: "https://practicesoftwaretesting.com/product/01M7P2PECT1X0BN3BM389H891Z - network capture", confidence: "medium", observed_at: "2026-11-18"}
 flows:

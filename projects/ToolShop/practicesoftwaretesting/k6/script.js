@@ -17,9 +17,7 @@ const STEADY = __ENV.STEADY || '10m';
 const RAMP_DOWN = __ENV.RAMP_DOWN || '3m';
 const THINK_MIN = 1;                                            // seconds, brd.yaml workload.think_time (random 1-3s)
 const THINK_MAX = 3;
-// Catalogue API-005 test_data/evidence records only 'Hammer' as an observed search term; add more here only after
-// recording them in api-catalogue.yaml's API-005 test_data, not invented.
-const SEARCH_TERMS = ['Hammer'];
+const SETUP_MAX_PAGES = 5;                                      // API-004 pages read in setup() for product ids and search terms
 
 // ---------- metrics ----------
 const blocked = new Counter('blocked_responses');               // BRD abort condition "Server health": 429, 503 or CDN/firewall block
@@ -77,9 +75,9 @@ function t1() {                                                 // T1: Browse pr
   txnDuration.add(Date.now() - t0, { transaction: 'T1' });
   think();
 }
-function t2() {                                                 // T2: Search products by keyword - API-005
+function t2(data) {                                             // T2: Search products by keyword - API-005; term comes from setup(), not timed
   const t0 = Date.now();
-  call('QUERY', '/products/search', { q: pickOne(SEARCH_TERMS) }, { transaction: 'T2', api: 'API-005' });
+  call('QUERY', '/products/search', { q: pickOne(data.searchTerms) }, { transaction: 'T2', api: 'API-005' });
   txnDuration.add(Date.now() - t0, { transaction: 'T2' });
   think();
 }
@@ -98,12 +96,24 @@ const TOTAL = MIX.reduce((s, t) => s + t.weight, 0);
 function pick() { let r = Math.random() * TOTAL; for (const t of MIX) { r -= t.weight; if (r < 0) return t; } return MIX[MIX.length - 1]; }
 
 // ---------- lifecycle ----------
-export function setup() {                                       // untimed: collect product ids needed by T3 (dynamic_values: API-004 -> API-006/API-007)
-  const res = http.request('QUERY', `${BASE_URL}/products`, JSON.stringify({ page: '1', between: 'price,1,100', is_rental: 'false' }), { headers: HEADERS, tags: { phase: 'setup' } });
-  guard(res);
-  const productIds = res.status === 200 ? (res.json('data') || []).map((p) => p.id) : [];
-  if (!productIds.length) { throw new Error(`setup failed: no product ids found (status ${res.status})`); }
-  return { productIds };
+export function setup() {                                       // untimed: product ids (T3) and search terms (T2) from API-004 pages 1..SETUP_MAX_PAGES
+  const productIds = [];
+  const words = new Map();                                      // lowercase word -> first spelling seen, for deduplication
+  for (let page = 1; page <= SETUP_MAX_PAGES; page++) {
+    const res = http.request('QUERY', `${BASE_URL}/products`, JSON.stringify({ page: String(page), between: 'price,1,100', is_rental: 'false' }), { headers: HEADERS, tags: { phase: 'setup', api: 'API-004' } });
+    guard(res);
+    const items = res.status === 200 ? (res.json('data') || []) : [];
+    if (!items.length) { break; }                               // an empty or failed page ends the listing
+    for (const p of items) {
+      productIds.push(p.id);
+      const word = String(p.name || '').trim().split(/\s+/)[0] || '';
+      if (word.length >= 3 && !words.has(word.toLowerCase())) { words.set(word.toLowerCase(), word); }
+    }
+  }
+  if (!productIds.length) { throw new Error('setup failed: no product ids found from API-004'); }
+  const searchTerms = [...words.values()];
+  if (!searchTerms.length) { throw new Error('setup failed: no search terms (words of 3+ characters) found in API-004 product names'); }
+  return { productIds, searchTerms };
 }
 export function mixed(data) { pick().run(data); }
 export function smokeAll(data) { MIX.forEach((t) => t.run(data)); }
