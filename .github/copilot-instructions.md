@@ -20,7 +20,9 @@ Built so far: Steps 1-3 (requirements, BRD, missing-parameter questions), Steps 
 12. The execution report is produced only by `tools/report.py` (see `.github/skills/report-builder/`). Never edit `report.html` or any run file, never add conclusions or root causes by hand, and never describe a run below the peak load as meeting a requirement.
 13. Server-side monitoring is collected only by `tools/runk6.py` through `tools/monitor.py` (see `.github/skills/monitoring-evidence/`). Never edit `monitoring.json`, never invent CPU or memory figures, and say plainly when a source (Azure, Dynatrace) is not built or a collection failed.
 14. The client pack is built only by `tools/clientpack.py` (see `.github/skills/client-pack/`). Never send, upload or email it, never edit it, never change the BRD status yourself, and never copy secret-like text anywhere if the tool refuses.
-15. Do not create extra documents (no status/decision/handoff logs; `docs/overview.md` is allowed). The only state files are `brd.yaml`, `environments.yaml`, `open-items.md`, `api-catalogue.yaml` and `STATE.md` inside the project folder. Keep `STATE.md` to about 8 lines.
+15. To run the whole flow, follow `.github/skills/end-to-end/SKILL.md`: loop on `python tools/status.py <project>`, which is the source of truth for which stage is done and what is next. Never mark a stage done by hand, never skip one, and stop at every human decision the skill lists.
+16. After changing any file in `tools/`, `.github/` or `templates/`, run `python tools/lint.py` and `python -m unittest discover -s tests`, fix what they report, and show the user the result. Never weaken a test or a check to make it pass; tell the user instead.
+17. Do not create extra documents (no status/decision/handoff logs; `docs/overview.md` is allowed). The only state files are `brd.yaml`, `environments.yaml`, `open-items.md`, `api-catalogue.yaml` and `STATE.md` inside the project folder. Keep `STATE.md` to about 8 lines.
 
 ## Where things live
 - `templates/brd.template.yaml`: the BRD structure. Copy it, never edit it per project.
@@ -33,6 +35,8 @@ Built so far: Steps 1-3 (requirements, BRD, missing-parameter questions), Steps 
 - `projects/<client>/<app>/k6/script.js` and `k6/requirement-map.yaml`: the generated script and its requirement-to-metric map.
 - `projects/<client>/<app>/runs/<run-id>/`: `run.json` (UTC window, outcome), `summary.json`, `k6-output.txt`, `monitoring.json` (CPU and memory samples), `dashboard.html` (k6 charts, load runs) and `report.html` (the execution report).
 - `projects/<client>/<app>/client-pack/`: the pack (`index.html` cover, `brd.html`, `runs/`, `manifest.json`) and its zip.
+- `tools/lint.py`: checks the repo's own files (skill and prompt frontmatter, references, rule numbers). `tests/test_tools.py`: tests of the tools; run with `python -m unittest discover -s tests`.
+- `tools/status.py`: shows which stages of a project are done and what is next. `tools/targetcheck.py`: checks that the target answers the catalogue's read calls (read-only, one request per API).
 - `tools/clientpack.py`: builds the client pack. Always use it.
 - `tools/monitor.py`: server-side CPU and memory sampling (`check` does a preflight sample). Used by runk6.
 - `tools/report.py`: builds `report.html` for a run. Always use it.

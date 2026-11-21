@@ -18,7 +18,7 @@ environments:
     test_data: "Seeded demo data of the local copy; synthetic data only"
     credentials_env_vars: []
     known_differences: "Not yet compared with the public site (the catalogue was built from the public site)"
-    verified: {date: "2026-11-18", by: "Test lead", note: "7 catalogue calls returned 200 on the local copy via curl; status codes only, response shapes not compared"}
+    verified: {date: "2026-11-20", by: "tools/targetcheck.py", note: "7 of 7 read calls matched the catalogue (status and field names); 0 skipped (writes, logins or no value)"}
   public:
     description: Public Practice Software Testing site (third-party hosted, behind a CDN)
     type: public

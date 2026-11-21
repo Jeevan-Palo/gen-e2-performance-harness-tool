@@ -39,3 +39,10 @@ Set `monitoring` in `environments.yaml`: for a local Docker app `{source: docker
 
 ## Step 11: client pack
 In Copilot Chat (Agent mode) type `/build-pack` and name the project, or run `python tools/clientpack.py projects/<client>/<app>` (add `--open` to open the cover). It writes `client-pack/<app>-<run-id>/` with `index.html` (cover summary), `brd.html`, every run's report and evidence, and `manifest.json`, plus a `.zip`. It refuses if the BRD has missing must-haves, if no passed load run exists, or if secret-like text is found. It never sends anything.
+
+## Start here
+New project: in Copilot Chat (Agent mode) type `/run-end-to-end`. It runs `python tools/status.py <project>`, does the next unfinished stage, and stops only where you must decide (missing requirement values, environment and authorisation, write actions, how many users to run, sharing the pack). To see where any project stands, or to resume after a break: `python tools/status.py projects/<client>/<app>`.
+Stage 4 is a read-only check that the target answers the catalogue's calls: `python tools/targetcheck.py projects/<client>/<app>` (one request per read API, no writes, no logins).
+
+## Checking the harness itself
+After any change to the tools, skills, prompts or instructions: `python tools/lint.py` (repo files are consistent) and `python -m unittest discover -s tests` (tools behave; tests that need k6 are skipped if k6 is missing). Both must pass before you rely on a change.

@@ -1,6 +1,6 @@
 ---
 name: api-discovery-browser
-description: Discover APIs by using the application in a browser when no API documentation exists or it is incomplete: record pages, requests, responses and business flow into api-catalogue.yaml. Use for Step 5 of the performance flow.
+description: Discover APIs by using the application in a browser when no API documentation exists or it is incomplete, and record pages, requests, responses and business flow into api-catalogue.yaml. Use for Step 5 of the performance flow.
 ---
 
 # API discovery in the browser (Step 5)

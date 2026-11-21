@@ -63,7 +63,7 @@ def check(d):
         for k, lab in [("target", "target"), ("percentile", "percentile"), ("load_condition", "load condition")]:
             if blank(r.get(k)) and not (k == "percentile" and str(r.get("metric", "")).lower() in ("error rate", "throughput", "availability")):
                 m.append(f"Requirement {r.get('id') or r.get('metric')}: {lab}")
-    if not any(str(t.get("needed", "")).lower().startswith("y") for t in (d.get("test_types") or []) if isinstance(t, dict)):
+    if not any((t.get("needed") is True or str(t.get("needed", "")).strip().lower() in ("yes", "y", "true")) for t in (d.get("test_types") or []) if isinstance(t, dict)):
         m.append("Test types needed (at least one marked yes)")
     ab = rows(d.get("abort_conditions"), ["threshold", "action"])
     if not ab: m.append("Abort (stop) conditions agreed with operations")
