@@ -20,7 +20,8 @@ Each project has `environments.yaml`: one block per environment (local, test, pu
 ## Steps 4-5: API catalogue
 1. In Copilot Chat (Agent mode) type `/build-catalogue` and name the project.
 2. Put API files (Postman collection, OpenAPI/Swagger, API list document, or a HAR recording) in `sources/` first if you have them.
-3. Answer its questions. It finishes when `python tools/catalogue.py check` passes.
+3. It asks which source to use (Postman collection, OpenAPI/Swagger, API list document, HAR recording or browser discovery) and follows the matching skill.
+4. Answer its questions. It finishes when `python tools/catalogue.py check` passes.
 
 ## Step 7: k6 script
 1. Install k6 on your machine (macOS: `brew install k6`).

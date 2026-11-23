@@ -1,0 +1,211 @@
+meta:
+  client: saucedemo
+  application: postmancollection
+  version: '0.1'
+  date: ''
+  brd_owner: ''
+  prepared_by: ''
+  status: Draft
+  open_items_decision: proceed_with_open_items
+purpose: To test this tool
+objectives: []
+scope_in:
+- Authentication (T1), Inventory (T2) and Cart (T3) APIs of the Postman collection on dummyjson.com
+scope_out: []
+stakeholders:
+- role: Business owner
+  name: ''
+  responsibility: Owns requirements and accepts results
+- role: Environment owner
+  name: ''
+  responsibility: Authorises testing in the target environment
+- role: Operations / support contact
+  name: ''
+  responsibility: Agrees stop conditions, informed before and during runs
+- role: Performance test lead
+  name: ''
+  responsibility: Plans and runs the test, reports results
+- role: Development / architecture contact
+  name: ''
+  responsibility: Supports diagnosis and fixes
+transactions:
+- id: T1
+  name: Authentication
+  user_type: ''
+  criticality: ''
+  traffic_share: 34%
+  flow: ''
+  measure_start_end: From the user action (click or page request) until the next page is fully loaded
+  notes: ''
+- id: T2
+  name: Inventory
+  user_type: ''
+  criticality: ''
+  traffic_share: 33%
+  flow: ''
+  measure_start_end: From the user action (click or page request) until the next page is fully loaded
+  notes: ''
+- id: T3
+  name: Cart
+  user_type: ''
+  criticality: ''
+  traffic_share: 33%
+  flow: ''
+  measure_start_end: From the user action (click or page request) until the next page is fully loaded
+  notes: ''
+workload:
+  peak_concurrent_users: Up to the environment limit (5 concurrent users), stepped; real peak to be confirmed from analytics
+  peak_tps: ''
+  peak_window: Busiest business hour; tested as 5 min ramp-up, 20 min steady load, 5 min ramp-down
+  avg_daily_volume: ''
+  growth_12m: ''
+  think_time: 5 seconds between user actions
+  geography: ''
+  data_volumes: ''
+  basis: assumed
+requirements:
+- id: PR-01
+  transaction: All
+  metric: Error rate
+  target: <= 1%
+  percentile: n/a
+  load_condition: peak load
+  priority: Must
+test_types:
+- type: Baseline (single user)
+  needed: 'yes'
+  notes: ''
+- type: Load
+  needed: 'yes'
+  notes: ''
+- type: Stress
+  needed: 'no'
+  notes: ''
+- type: Spike
+  needed: 'no'
+  notes: ''
+- type: Endurance (soak)
+  needed: 'no'
+  notes: ''
+- type: Scalability
+  needed: 'no'
+  notes: ''
+environment:
+  target: ''
+  owner: ''
+  comparison_with_production: ''
+  third_party_services: ''
+  test_data: ''
+  personal_data_confirmation: 'Yes: only synthetic test data is used; no real personal or payment data'
+  monitoring_access: ''
+  test_windows: ''
+abort_conditions:
+- condition: Error rate
+  threshold: '> 5% for 2 consecutive minutes'
+  action: Stop the test and notify the environment owner
+- condition: Response time
+  threshold: p95 > 10 s for 2 consecutive minutes
+  action: Stop the test
+- condition: Throttling or blocking
+  threshold: Any 429, 503 or WAF/CDN block response
+  action: Stop immediately
+- condition: Request from operations or environment owner
+  threshold: Any stop request
+  action: Stop immediately
+monitoring_reporting:
+  metrics: ''
+  tools: ''
+  interim_updates: ''
+  final_report: ''
+risks:
+- type: ''
+  description: ''
+  owner: ''
+  impact: ''
+- type: Assumption
+  description: 'Advised values accepted by the user in place of client figures: workload.peak_window, workload.think_time, workload.basis, requirements, test_types, abort_conditions, environment.personal_data_confirmation,
+    environments.yaml test_data, environments.yaml test_windows, environments.yaml monitoring.'
+  owner: Test lead
+  impact: Results show behaviour under advised settings; confirm with the client before sign-off
+- type: Assumption
+  description: 'Advised values accepted by the user in place of client figures: workload.peak_concurrent_users.'
+  owner: Test lead
+  impact: Results show behaviour under advised settings; confirm with the client before sign-off
+- type: Assumption
+  description: 'Advised values accepted by the user in place of client figures: transactions[].traffic_share, transactions[].measure_start_end.'
+  owner: Test lead
+  impact: Results show behaviour under advised settings; confirm with the client before sign-off
+exit_criteria: []
+open_items:
+- question: 'Peak load: What is the peak concurrent user or TPS load, and is it sitewide or per transaction?'
+  owner: ''
+  due: ''
+  status: Open
+approvals:
+- name: ''
+  role: Business owner
+  decision: ''
+  date: ''
+- name: ''
+  role: Environment owner
+  decision: ''
+  date: ''
+- name: ''
+  role: Operations contact
+  decision: ''
+  date: ''
+evidence:
+- field: meta.client
+  source: user answer, 2026-11-23
+- field: meta.application
+  source: user answer, 2026-11-23
+- field: meta.open_items_decision
+  source: user answer, 2026-11-23
+- field: open_items[0].question
+  source: tools/brd.py check; unanswered in user response, 2026-11-23
+- field: open_items[1].question
+  source: tools/brd.py check; unanswered in user response, 2026-11-23
+- field: open_items[2].question
+  source: tools/brd.py check; unanswered in user response, 2026-11-23
+- field: transactions.T1.id
+  source: user answer, 2026-11-23; ID assigned to confirmed grouping
+- field: transactions.T1.name
+  source: user answer, 2026-11-23; confirmed Postman grouping
+- field: transactions.T2.id
+  source: user answer, 2026-11-23; ID assigned to confirmed grouping
+- field: transactions.T2.name
+  source: user answer, 2026-11-23; confirmed Postman grouping
+- field: transactions.T3.id
+  source: user answer, 2026-11-23; ID assigned to confirmed grouping
+- field: transactions.T3.name
+  source: user answer, 2026-11-23; confirmed Postman grouping
+- field: workload.peak_window
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: workload.think_time
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: workload.basis
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: test_types
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: abort_conditions
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: environment.personal_data_confirmation
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: workload.peak_concurrent_users
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: transactions.T1.traffic_share
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: transactions.T2.traffic_share
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: transactions.T3.traffic_share
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: transactions.T1.measure_start_end
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: transactions.T2.measure_start_end
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: transactions.T3.measure_start_end
+  source: advised by test lead (industry practice), accepted by user 2026-11-23
+- field: purpose
+  source: user answer, 2026-11-23
+- field: scope_in
+  source: user answer, 2026-11-23 (confirmed proposal based on the confirmed transaction groups)

@@ -1,0 +1,183 @@
+{
+ "created_utc": "2026-11-23T13:09:16Z",
+ "application": "postmancollection",
+ "client": "saucedemo",
+ "selected_run": "20261123T130156Z-saucedemo-environment-load-5vu",
+ "brd_version": "0.1",
+ "brd_status": "Draft",
+ "environment": "saucedemo-environment",
+ "tool": "k6 v2.4.0 (commit/devel, go1.27.4, darwin/arm64)",
+ "runs_included": [
+  "20261123T120612Z-saucedemo-environment-smoke-1vu",
+  "20261123T120639Z-saucedemo-environment-load-2vu",
+  "20261123T120940Z-saucedemo-environment-load-4vu",
+  "20261123T121246Z-saucedemo-environment-load-5vu",
+  "20261123T125531Z-saucedemo-environment-smoke-1vu",
+  "20261123T125549Z-saucedemo-environment-load-2vu",
+  "20261123T125853Z-saucedemo-environment-load-4vu",
+  "20261123T130156Z-saucedemo-environment-load-5vu"
+ ],
+ "runs_excluded_no_results": 0,
+ "files": [
+  {
+   "path": "brd.html",
+   "sha256": "14b73c82232b3772db53435ad277853d8537f603b0468fb6f7a364c6b8f91642"
+  },
+  {
+   "path": "index.html",
+   "sha256": "bbff88e63531c1ff6fda5da61f7ce4a60ef13403f1064bd3855adab1d95a20e6"
+  },
+  {
+   "path": "runs/20261123T120612Z-saucedemo-environment-smoke-1vu/k6-output.txt",
+   "sha256": "231e26dfc6a99425e943e38a192224f7ef8eee048205f4e5df235efc704a6038"
+  },
+  {
+   "path": "runs/20261123T120612Z-saucedemo-environment-smoke-1vu/report.html",
+   "sha256": "73269186ceaee422e62e399bb0a411a13dcddc43debae2fd7f14d75c8774ec59"
+  },
+  {
+   "path": "runs/20261123T120612Z-saucedemo-environment-smoke-1vu/run.json",
+   "sha256": "db97cabe1106d55e46a0c7e99499746cb9f127557a5e31574370bc9b67768172"
+  },
+  {
+   "path": "runs/20261123T120612Z-saucedemo-environment-smoke-1vu/summary.json",
+   "sha256": "b4fb7ff78ba2e459cbf18501f9ea7801fa69e149a86e5f874fea05eaf524daf8"
+  },
+  {
+   "path": "runs/20261123T120639Z-saucedemo-environment-load-2vu/dashboard.html",
+   "sha256": "a2ad0f9a44fafc2e513b79cab090700e32c676dd795211dc43215232069cba83"
+  },
+  {
+   "path": "runs/20261123T120639Z-saucedemo-environment-load-2vu/k6-output.txt",
+   "sha256": "e546300536f95e0ce631cd4a797a6ccbefaa9a38897e7cb9c6a6710ae64e9efb"
+  },
+  {
+   "path": "runs/20261123T120639Z-saucedemo-environment-load-2vu/report.html",
+   "sha256": "ecc125a8e56e1fd016607fddf7f4ed5a931b0991ac4576e803b2a4783820b72e"
+  },
+  {
+   "path": "runs/20261123T120639Z-saucedemo-environment-load-2vu/run.json",
+   "sha256": "363dfd5a12fa68e4856012bf175ebb17a92472c6519bce1812f37c6a8032692c"
+  },
+  {
+   "path": "runs/20261123T120639Z-saucedemo-environment-load-2vu/summary.json",
+   "sha256": "854587240e9b6e420393e1e9e254c57a2e70307aa799c24f7941a1eb8b8f450d"
+  },
+  {
+   "path": "runs/20261123T120940Z-saucedemo-environment-load-4vu/dashboard.html",
+   "sha256": "feb197e32d6e3b6f260dc0d54cc3f387d8205e555845356a64568d4d3792f105"
+  },
+  {
+   "path": "runs/20261123T120940Z-saucedemo-environment-load-4vu/k6-output.txt",
+   "sha256": "212a816866bdd1c05d4a9419367e06c8dee7d285e855d0d7d35dde1e979657aa"
+  },
+  {
+   "path": "runs/20261123T120940Z-saucedemo-environment-load-4vu/report.html",
+   "sha256": "c1620d0de8d67e6f80f1d49ce28561a71627028272b53f64b97fae0a98e9224d"
+  },
+  {
+   "path": "runs/20261123T120940Z-saucedemo-environment-load-4vu/run.json",
+   "sha256": "37364c53f1bfedf3f1e12a97579608f926d0a3206f3a1ddb899f813193812e44"
+  },
+  {
+   "path": "runs/20261123T120940Z-saucedemo-environment-load-4vu/summary.json",
+   "sha256": "9cc4bdf905251e61bc68e5b5778e2c8ce4e728dae27d26a4ddc11d9fdef07599"
+  },
+  {
+   "path": "runs/20261123T121246Z-saucedemo-environment-load-5vu/dashboard.html",
+   "sha256": "9d4378960c5355e6d67d1782d3d60313049610207da322aa37015faf745f593c"
+  },
+  {
+   "path": "runs/20261123T121246Z-saucedemo-environment-load-5vu/k6-output.txt",
+   "sha256": "872d28b6abbc0d40937b15e6e8db7662c1c0b1a243e5d1fdd2895617d7034178"
+  },
+  {
+   "path": "runs/20261123T121246Z-saucedemo-environment-load-5vu/report.html",
+   "sha256": "bc82c9e82cace9516b7fc2b0bd697b6a472ca6807c8b4bcc10c5e8b07d752d1b"
+  },
+  {
+   "path": "runs/20261123T121246Z-saucedemo-environment-load-5vu/run.json",
+   "sha256": "4136741e9c961f604938e03ee21e78a36c1e601a531cb5801fbf1f0db56d6e2b"
+  },
+  {
+   "path": "runs/20261123T121246Z-saucedemo-environment-load-5vu/summary.json",
+   "sha256": "bfe0533864438031533a720a2990ca5b54efa50298de3af1c4500c2430a9a60e"
+  },
+  {
+   "path": "runs/20261123T125531Z-saucedemo-environment-smoke-1vu/k6-output.txt",
+   "sha256": "422dd8fdb4334fb3edf0634371c5e7a3f1d3ca8a7ad7c2f879a5beb0c4e7c048"
+  },
+  {
+   "path": "runs/20261123T125531Z-saucedemo-environment-smoke-1vu/report.html",
+   "sha256": "8ca963955d358c81667b1844186e4275942d3a6a5641f8deacb3871995e2d098"
+  },
+  {
+   "path": "runs/20261123T125531Z-saucedemo-environment-smoke-1vu/run.json",
+   "sha256": "e6e16bad545f629411163d37de2b08ddd0d680940a43c4fc6c1fbb401161ca24"
+  },
+  {
+   "path": "runs/20261123T125531Z-saucedemo-environment-smoke-1vu/summary.json",
+   "sha256": "76e58db885d231322a8829bd026043b521b1cad9cc7c50f309345ad385239605"
+  },
+  {
+   "path": "runs/20261123T125549Z-saucedemo-environment-load-2vu/dashboard.html",
+   "sha256": "af08ec063fab22deca73a66fc75ebe3a0b2e7d381f4a0b4e87e473a19540d206"
+  },
+  {
+   "path": "runs/20261123T125549Z-saucedemo-environment-load-2vu/k6-output.txt",
+   "sha256": "9b36168f440649faab39d40598fc97da9542c27b299c682ff2210dae08edb9f5"
+  },
+  {
+   "path": "runs/20261123T125549Z-saucedemo-environment-load-2vu/report.html",
+   "sha256": "eb8c2eb3d4d36888709edcac60e7f9c8f9092f2e54a4cd4d82a0c8fd0e9d9993"
+  },
+  {
+   "path": "runs/20261123T125549Z-saucedemo-environment-load-2vu/run.json",
+   "sha256": "45739f6b560dcb26fdc4bea14d0dd49f13ff8ffeb86e72d02c7e6bcf1553688c"
+  },
+  {
+   "path": "runs/20261123T125549Z-saucedemo-environment-load-2vu/summary.json",
+   "sha256": "d81e3c74c62f5a0ecaaef581c25d273fed34f25761a352af32725dbf410640d9"
+  },
+  {
+   "path": "runs/20261123T125853Z-saucedemo-environment-load-4vu/dashboard.html",
+   "sha256": "9f02a6e895e842436cba043b348be5a071605a838a30546938732ee3a4a8ea34"
+  },
+  {
+   "path": "runs/20261123T125853Z-saucedemo-environment-load-4vu/k6-output.txt",
+   "sha256": "c74be9ecb59bf04cb1f773453de35280547dc78b92c588efc48a3ed34ae6d9df"
+  },
+  {
+   "path": "runs/20261123T125853Z-saucedemo-environment-load-4vu/report.html",
+   "sha256": "8b8925cd9e1724eb2088e81cade35df8a7a030ce7b99bd6fc5fc9bd812814659"
+  },
+  {
+   "path": "runs/20261123T125853Z-saucedemo-environment-load-4vu/run.json",
+   "sha256": "70e5bcd17474ccb53414e79e752fa926eb45e2a601c8839ecfc257cd8ea15edb"
+  },
+  {
+   "path": "runs/20261123T125853Z-saucedemo-environment-load-4vu/summary.json",
+   "sha256": "3c8f77dd7e2832b8a633cca15b1f6782a827c330051090df77e8d64ff3b0ee2a"
+  },
+  {
+   "path": "runs/20261123T130156Z-saucedemo-environment-load-5vu/dashboard.html",
+   "sha256": "ecfed63f4580f9ebf11f64e21ee3ca4eb912acbcde1873eaf601eef23c3135bc"
+  },
+  {
+   "path": "runs/20261123T130156Z-saucedemo-environment-load-5vu/k6-output.txt",
+   "sha256": "0c23078159d0ecfaa14beb6e9ed6e2341025a16ecced89d4239b3f1ec2b7bd5c"
+  },
+  {
+   "path": "runs/20261123T130156Z-saucedemo-environment-load-5vu/report.html",
+   "sha256": "a8fe78c09736d68e8820304547046114aee79b5485e61a2bca1691882dbb5678"
+  },
+  {
+   "path": "runs/20261123T130156Z-saucedemo-environment-load-5vu/run.json",
+   "sha256": "341091eb4cf23ddce14ab6b6393e4bbf3d46b8c4063183f40024619c8d06d039"
+  },
+  {
+   "path": "runs/20261123T130156Z-saucedemo-environment-load-5vu/summary.json",
+   "sha256": "d8d66d5861a716c3357da00fb7a08162ee960b96f5c6ff44b8b8df7a422a8b60"
+  }
+ ]
+}

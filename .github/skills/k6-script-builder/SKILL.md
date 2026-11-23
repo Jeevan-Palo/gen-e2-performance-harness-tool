@@ -20,6 +20,7 @@ Start from `.github/skills/k6-script-builder/reference-skeleton.js` (tested). Ke
    - One function per transaction, each timing the whole transaction into the `transaction_duration` Trend, tagged `transaction: 'T1'`. Every request is tagged `transaction` and `api: '<catalogue id>'`.
    - Traffic mix weights = BRD traffic shares. Think time = BRD think time.
    - Values one call needs from another (ids, tokens) follow `dynamic_values` in the catalogue. If a transaction starts without them, collect them in `setup()` (untimed) and never time the setup calls.
+   - Never return a token, password or other secret from `setup()`: k6 writes setup data into `summary.json`, which would put it in the run files and make `clientpack.py` refuse. Keep tokens in a per-VU variable (a module-level `let` filled by an untimed login on the VU's first use).
    - Test data (search terms, ids) only from values in the catalogue or given by the user. Never real personal data.
    - Calls with `safe_to_load` of `no` or `conditional`, or deferred transactions, are not in the script.
    - Client-side apps (discovery found no backend API for login or other transactions, or pages return 404 without the browser session): only with the user's approval, drive the flow with the `k6/browser` module (`options: { browser: { type: 'chromium' } }` per scenario). Time each transaction into `transaction_duration`, record failures in a `transaction_failed` Rate (map the error-rate requirement to it), and read login names from the variables listed in `credentials_env_vars`. Never time an empty transaction.
@@ -28,6 +29,7 @@ Start from `.github/skills/k6-script-builder/reference-skeleton.js` (tested). Ke
    - One threshold per active requirement on `transaction_duration{transaction:Tx}` (response time, with the percentile and value from the BRD in milliseconds) or `http_req_failed` (error rate).
    - Abort conditions from the BRD as `{ threshold, abortOnFail: true, delayAbortEval }` entries: error rate, response time (for example 3x target), and `blocked_responses` (429, 503, CDN/WAF block) which aborts immediately.
    - Per-request metrics (`http_req_duration{api:...}`) are for diagnosis only; put no pass/fail thresholds on them.
+   - k6 exports a tagged sub-metric to `summary.json` only if a threshold names it, and the report reads them. So for every active transaction and every API in the script add an always-pass diagnostic entry: `transaction_duration{transaction:Tx}: ['max>=0']`, `http_req_duration{api:API-nnn}: ['max>=0']` and `http_reqs{api:API-nnn}: ['count>=0']`. Without them the report's per-transaction and per-API tables are empty.
 5. Write `k6/requirement-map.yaml`: one entry per active requirement: `{requirement: PR-01, k6_metric: "transaction_duration{transaction:T2}", threshold: "p(95)<2000"}`. The strings must match the script exactly. The report step reads this file.
 6. Run `python tools/k6check.py projects/<client>/<app>` and fix every issue. Repeat until it says OK.
 7. Update `STATE.md` (stage "7. Script written", date). Tell the user how to run the first smoke test:

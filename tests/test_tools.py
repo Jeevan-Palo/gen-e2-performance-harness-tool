@@ -174,6 +174,25 @@ class TestCatalogueImports(unittest.TestCase):
             "body": {"mode": "raw", "raw": json.dumps({"email": "a@b.c", "password": "hunter2hunter2"})}}}]}, open(col, "w"))
         tool("catalogue.py", "import-postman", self.cat, col); t = open(self.cat).read()
         self.assertNotIn("hunter2", t); self.assertNotIn("eyJabc", t)
+    def test_postman_reads_test_scripts_and_environment(self):
+        def req(name, method, url, script, hdr=()):
+            return {"name": name, "request": {"method": method, "url": url, "header": [{"key": "Authorization", "value": "Bearer {{token}}"}] if hdr else []},
+                    "event": [{"listen": "test", "script": {"exec": script}}]}
+        login = ["pm.response.to.have.status(200);", "const d = pm.response.json();", "pm.expect(d).to.have.property('accessToken');", "pm.environment.set('token', d.accessToken);"]
+        col = os.path.join(self.tmp, "c.json"); env = os.path.join(self.tmp, "e.json")
+        json.dump({"item": [
+            req("Bad login", "POST", "{{base_url}}/login", ["pm.expect(pm.response.code).to.be.oneOf([400, 401]);"]),
+            req("Login", "POST", "{{base_url}}/login", login),
+            req("List", "GET", "{{base_url}}/items", ["pm.expect(pm.response.code).to.be.oneOf([200, 201]);", "pm.expect(pm.response.responseTime).to.be.below(1500);"], hdr=True),
+            req("Other", "GET", "{{base_url}}/other", [], hdr=True)]}, open(col, "w"))
+        json.dump({"values": [{"key": "base_url", "value": "https://api.example.com", "enabled": True}, {"key": "token", "value": "supersecretvalue1", "enabled": True}]}, open(env, "w"))
+        tool("catalogue.py", "import-postman", self.cat, col, env); d = yaml.safe_load(open(self.cat)); by = {a["name"]: a for a in d["apis"]}
+        self.assertEqual(d["meta"]["base_url"], "https://api.example.com"); self.assertNotIn("supersecret", open(self.cat).read())
+        self.assertEqual(sorted(by), ["List", "Login", "Other"])
+        self.assertEqual(by["Login"]["response"]["status"], 200); self.assertEqual(by["Login"]["response"]["fields"], ["accessToken"])
+        self.assertEqual(by["List"]["response"]["expected_statuses"], [200, 201]); self.assertIn("1500", by["List"]["response"]["notes"])
+        self.assertEqual(by["List"]["dynamic_values"][0]["from_api"], by["Login"]["id"]); self.assertEqual(by["List"]["depends_on"], [by["Login"]["id"]])
+        self.assertEqual(by["Other"]["response"], {}); self.assertTrue(any("Bad login" in n for n in d["notes"]))
     def test_har_excludes_third_party_and_redacts(self):
         har = os.path.join(self.tmp, "c.har")
         json.dump({"log": {"entries": [
@@ -214,6 +233,12 @@ class TestReportAndPack(unittest.TestCase):
         import report; d = make_project(self.tmp, runs=[("r-load-5", "load", 5, "passed", 80)]); page, f = report.build(d, "r-load-5")
         st = {x["r"]["id"]: x["status"] for x in f["res"]}
         self.assertEqual(st["PR-01"], "Not measured at peak load"); self.assertEqual(st["PR-04"], "Deferred"); self.assertIn("deferred", f["vsub"]); self.assertEqual(f["vcls"], "warn")
+    def test_report_lists_each_api_when_k6_exported_them(self):
+        import report; d = make_project(self.tmp, runs=[("r-api", "load", 10, "passed", 80)]); sp = os.path.join(d, "runs", "r-api", "summary.json")
+        s = json.load(open(sp)); s["metrics"]["http_req_duration{api:API-001}"] = metric(120); s["metrics"]["http_req_duration{api:API-004}"] = metric(300); s["metrics"]["http_reqs{api:API-004}"] = {"count": 42, "rate": 1}
+        json.dump(s, open(sp, "w")); page, _ = report.build(d, "r-api")
+        self.assertIn("Response times per API", page); self.assertIn("API-001", page); self.assertIn("GET /x1", page); self.assertIn("API-004", page); self.assertNotIn("API-002<", page)
+        json.dump({**s, "metrics": {k: v for k, v in s["metrics"].items() if "api:" not in k}}, open(sp, "w")); self.assertIn("not exported", report.build(d, "r-api")[0])
     def test_at_peak_is_met_or_not_met(self):
         import report; d = make_project(self.tmp, runs=[("r-ok", "load", 10, "passed", 80), ("r-slow", "load", 10, "passed", 2500)])
         a = {x["r"]["id"]: x["status"] for x in report.build(d, "r-ok")[1]["res"]}; b = {x["r"]["id"]: x["status"] for x in report.build(d, "r-slow")[1]["res"]}
@@ -264,7 +289,12 @@ class TestMonitor(unittest.TestCase):
 class _H(BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def _s(self, o, c=200): b = json.dumps(o).encode(); self.send_response(c); self.send_header("Content-Type", "application/json"); self.send_header("Content-Length", str(len(b))); self.end_headers(); self.wfile.write(b)
+    def do_POST(self):
+        n = int(self.headers.get("Content-Length") or 0); body = json.loads(self.rfile.read(n) or b"{}")
+        if self.path == "/login" and body == {"username": "u1", "password": "pw1"}: return self._s({"accessToken": "tok123"})
+        self._s({"e": 1}, 401)
     def do_GET(self):
+        if self.path == "/secure": return self._s({"id": 1}) if self.headers.get("Authorization") == "Bearer tok123" else self._s({"e": 1}, 401)
         if self.path == "/items/a": return self._s({"id": "a"})
         if self.path == "/brands": return self._s([{"id": 1}])
         self._s({"e": 1}, 404)
@@ -289,6 +319,22 @@ apis:
         self.assertEqual(out.count(" OK"), 3); self.assertIn("status 404", out); self.assertIn("no_such_field", out); self.assertIn("write call, not sent", out)
         self.assertIn("tools/targetcheck.py", open(os.path.join(d, "environments.yaml")).read())
         self.assertEqual(json.load(open(os.path.join(d, "target-check.json")))["calls_ok"], 3)
+    def test_login_with_credentials_from_env_vars(self):
+        srv = ThreadingHTTPServer(("127.0.0.1", 0), _H); threading.Thread(target=srv.serve_forever, daemon=True).start(); self.addCleanup(srv.shutdown)
+        tmp = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, tmp); d = os.path.join(tmp, "p"); os.makedirs(d)
+        write(os.path.join(d, "environments.yaml"), f"active: l\nenvironments:\n  l:\n    description: t\n    type: local\n    base_url: \"http://127.0.0.1:{srv.server_address[1]}\"\n    owner: me\n    authorisation: not_required\n    max_vus: 5\n    max_run_minutes: 5\n    credentials_env_vars: [APP_USER, APP_PASSWORD]\n    monitoring: {{source: none, detail: \"\"}}\n    verified: {{date: \"\", by: \"\", note: \"\"}}\n")
+        write(os.path.join(d, "api-catalogue.yaml"), """
+apis:
+  - {id: API-001, method: POST, path: /login, transaction: T1, auth: none, safe_to_load: conditional, request_body: {example: {username: x, password: <redacted>}}, response: {status: 200, fields: [accessToken]}}
+  - {id: API-002, method: GET, path: /secure, transaction: T1, auth: bearer, safe_to_load: "yes", depends_on: [API-001], dynamic_values: [{name: token, from_api: API-001, json_path: "$.accessToken"}], response: {status: 200, fields: [id]}}
+  - {id: API-003, method: DELETE, path: /secure, transaction: T1, auth: bearer, safe_to_load: conditional, response: {status: 200}}
+""")
+        rc, out = tool("targetcheck.py", d); self.assertEqual(rc, 1); self.assertEqual(json.load(open(os.path.join(d, "target-check.json")))["calls_ok"], 0)
+        self.assertIn("credentials_env_vars", out)
+        rc, out = tool("targetcheck.py", d, env={"APP_USER": "u1", "APP_PASSWORD": "pw1"}); self.assertEqual(rc, 0, out); tc = open(os.path.join(d, "target-check.json")).read()
+        self.assertEqual(json.loads(tc)["calls_ok"], 1); self.assertIn("write call, not sent", out)
+        for secret in ("pw1", "tok123"): self.assertNotIn(secret, out + tc)
+        rc, out = tool("targetcheck.py", d, env={"APP_USER": "u1", "APP_PASSWORD": "wrong"}); self.assertEqual(rc, 1); self.assertIn("login answered 401", out)
     def test_refuses_when_not_confirmed(self):
         tmp = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, tmp); d = make_project(tmp, auth="not_confirmed"); rc, out = tool("targetcheck.py", d); self.assertNotEqual(rc, 0); self.assertIn("not_confirmed", out)
     def test_verified_note_replaces_a_block_style_value(self):

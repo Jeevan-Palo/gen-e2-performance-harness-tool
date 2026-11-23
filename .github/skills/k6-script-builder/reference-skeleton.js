@@ -36,9 +36,16 @@ const PERF_THRESHOLDS = PROFILE === 'smoke' ? { checks: ['rate==1'], http_req_fa
   http_req_failed: ['rate<0.01', { threshold: 'rate<0.02', abortOnFail: true, delayAbortEval: '1m' }],
 };
 
+// Diagnostic only: k6 exports a tagged sub-metric to the summary only if a threshold names it. These can never fail;
+// they make the report show timings per transaction and per API. One entry per transaction and per API id used below.
+const DIAGNOSTIC = {};
+['T1', 'T2', 'T3'].forEach((x) => { DIAGNOSTIC[`transaction_duration{transaction:${x}}`] = ['max>=0']; });
+['API-001', 'API-002'].forEach((x) => { DIAGNOSTIC[`http_req_duration{api:${x}}`] = ['max>=0']; DIAGNOSTIC[`http_reqs{api:${x}}`] = ['count>=0']; });
+
 export const options = {
   scenarios,
   thresholds: {
+    ...DIAGNOSTIC,
     ...PERF_THRESHOLDS,
     // abort on any sign of throttling or blocking (both profiles)
     blocked_responses: [{ threshold: 'count<1', abortOnFail: true }],

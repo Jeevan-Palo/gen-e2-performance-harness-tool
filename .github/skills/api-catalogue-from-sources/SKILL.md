@@ -10,7 +10,7 @@ Output: `projects/<client>/<app>/api-catalogue.yaml` (structure in `templates/ap
 ## Procedure
 1. If `api-catalogue.yaml` does not exist, copy the template. Read `brd.yaml` for the transaction ids (T1, T2, ...).
 2. List the API files in `sources/`. For each, use the script (never hand-parse):
-   - Postman collection: `python tools/catalogue.py import-postman <catalogue> <file>`
+   - Postman collection: use the `api-catalogue-from-postman` skill instead (it also reads test scripts and the environment file).
    - OpenAPI/Swagger: `python tools/catalogue.py import-openapi <catalogue> <file> [base_url]`
    - API list in a Word/PDF/Excel/text document: read it and add entries by hand, with `evidence.source_type: document`, the file and page as `source`, and `confidence: medium` or `low`.
 3. Fill what the import cannot know, using only the sources or the user's answers:

@@ -1,0 +1,111 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: projects/saucedemo/postmancollection/k6/script.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 2m30s max duration (incl. graceful stop):
+              * smoke: 1 iterations for each of 1 VUs (maxDuration: 2m0s, exec: smokeAll, gracefulStop: 30s)
+
+
+running (0m01.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m01.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m02.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m02.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m03.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m03.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m04.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m04.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m05.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m05.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m06.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m06.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m07.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m07.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m08.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m08.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m09.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m09.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m10.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m10.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m11.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m11.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m12.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m12.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m13.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m13.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m14.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m14.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m15.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m15.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m16.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m16.0s/2m0s  0/1 iters, 1 per VU
+
+
+  █ THRESHOLDS 
+
+    blocked_responses
+    ✓ 'count<1' count=0
+
+    checks
+    ✓ 'rate==1' rate=100.00%
+
+    http_req_failed
+    ✓ 'rate==0' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 9       0.532533/s
+    checks_succeeded...: 100.00% 9 out of 9
+    checks_failed......: 0.00%   0 out of 9
+
+    ✓ status is 2xx
+    ✓ login returns accessToken
+
+    CUSTOM
+    blocked_responses..............: 0      0/s
+    transaction_duration...........: avg=515ms    min=336ms   med=394ms   max=815ms    p(90)=730.8ms p(95)=772.9ms  p(99)=806.58ms
+
+    HTTP
+    http_req_duration..............: avg=202.94ms min=51.06ms med=205.7ms max=350.93ms p(90)=332.4ms p(95)=341.66ms p(99)=349.07ms
+      { expected_response:true }...: avg=202.94ms min=51.06ms med=205.7ms max=350.93ms p(90)=332.4ms p(95)=341.66ms p(99)=349.07ms
+    http_req_failed................: 0.00%  0 out of 9
+    http_reqs......................: 9      0.532533/s
+
+    EXECUTION
+    iteration_duration.............: avg=16.89s   min=16.89s  med=16.89s  max=16.89s   p(90)=16.89s  p(95)=16.89s   p(99)=16.89s  
+    iterations.....................: 1      0.05917/s
+    vus............................: 1      min=1      max=1
+    vus_max........................: 1      min=1      max=1
+
+    NETWORK
+    data_received..................: 98 kB  5.8 kB/s
+    data_sent......................: 4.5 kB 266 B/s
+
+
+
+
+running (0m16.9s), 0/1 VUs, 1 complete and 0 interrupted iterations
+smoke ✓ [ 100% ] 1 VUs  0m16.9s/2m0s  1/1 iters, 1 per VU

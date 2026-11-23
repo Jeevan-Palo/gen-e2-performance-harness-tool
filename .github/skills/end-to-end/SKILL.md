@@ -17,8 +17,8 @@ description: Run the whole performance-testing flow for a project by looping on 
 |---|---|---|
 | 1 BRD | Read the sources, fill `brd.yaml`, ask for missing parameters, render the BRD | `requirements-intake`, `brd-builder` |
 | 2 Environment | Help the user fill `environments.yaml` (URL, owner, limits, monitoring); run `envconf.py check` | the user decides the values |
-| 3 Catalogue | Build `api-catalogue.yaml` from supplied files, else discover in the browser or from a HAR file | `api-catalogue-from-sources`, `api-discovery-browser` |
-| 4 Target check | `python tools/targetcheck.py <project>` (read calls only) | tool |
+| 3 Catalogue | Build `api-catalogue.yaml` from supplied files, else discover in the browser or from a HAR file | `api-source-selector`, then `api-catalogue-from-postman`, `api-catalogue-from-sources` or `api-discovery-browser` |
+| 4 Target check | `python tools/targetcheck.py <project>` (read calls only; if the catalogue needs a login, the user runs it in their own terminal with the `credentials_env_vars` exported, and it sends one login POST) | tool |
 | 5 Script | Generate the k6 script and pass `k6check.py` | `k6-script-builder` |
 | 6 Smoke | `tools/runk6.py <project> --profile smoke` | `k6-run` |
 | 7 Load | Step up through `tools/runk6.py`, one run at a time | `k6-run`, `monitoring-evidence` |

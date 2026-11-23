@@ -123,6 +123,23 @@ def monitoring_html(mon, run, env):
     if st.get("status") == "not_built": return f"<p class='muted'>{esc(st.get('note'))}. No server-side data was collected.</p>"
     return f"<p class='muted'>Not collected in this run (monitoring source: {esc(m.get('source') or 'none')}). {esc(m.get('detail'))}</p>"
 
+def api_table(d, M):
+    """Per-API response times from the k6 sub-metrics http_req_duration{api:ID} (the script must name them in thresholds, or k6 does not export them)."""
+    cp = os.path.join(d, "api-catalogue.yaml")
+    apis = {a.get("id"): a for a in ((yaml.safe_load(open(cp, encoding="utf-8")) or {}).get("apis") or [])} if os.path.exists(cp) else {}
+    found = {}
+    for k, v in M.items():
+        m = re.fullmatch(r"http_req_duration\{api:([\w\-]+)\}", k)
+        if m: found[m.group(1)] = v
+    if not found: return "<h3>Response times per API</h3><p class='muted'>Per-API timings were not exported in this run.</p>"
+    rows = []
+    for i in sorted(found):
+        v, a = found[i], apis.get(i, {}); n = (M.get(f"http_reqs{{api:{i}}}") or {}).get("count")
+        rows.append(f"<tr><td>{esc(i)}</td><td>{esc(a.get('name', ''))}<br><span class='muted'>{esc(a.get('method', ''))} {esc(a.get('path', ''))}</span></td><td>{esc(a.get('transaction', ''))}</td><td class='n'>{f'{int(n):,}' if n is not None else '&ndash;'}</td>"
+                    + "".join(f"<td class='n'>{esc(ms(v[k])) if k in v else '&ndash;'}</td>" for k in ("avg", "med", "p(90)", "p(95)", "p(99)", "max")) + "</tr>")
+    return ("<h3>Response times per API</h3><table><tr><th>API</th><th>Call</th><th>Transaction</th><th class='n'>Requests</th><th class='n'>Average</th><th class='n'>Median</th><th class='n'>p90</th><th class='n'>p95</th><th class='n'>p99</th><th class='n'>Max</th></tr>"
+            + "".join(rows) + "</table><p class='muted'>One request per call, measured by the load tool (client side). Shown for diagnosis; the targets above apply to transactions.</p>")
+
 def bar_chart(rows):
     """Bars show how much of each target is used (100% line = the target). Rows without a target are listed in the table only."""
     items = []
@@ -236,6 +253,7 @@ def build(d, run_id=None):
         v = M[f"transaction_duration{{transaction:{r['id']}}}"]
         P.append(f"<tr><td>{esc(r['id'])} {esc(tx_names.get(r['id'],''))}</td><td class='n'>{esc(share.get(r['id'],'&ndash;'))}</td>" + "".join(f"<td class='n'>{esc(ms(v[k])) if k in v else '&ndash;'}</td>" for k in ("avg", "med", "p(90)", "p(95)", "p(99)", "max")) + "</tr>")
     P.append("</table><p class='muted'>A transaction is timed from its first request to the last response, as defined in the BRD. All timings are measured by the load tool (client side).</p>")
+    P.append(api_table(d, M))
     P.append("<h2>3. Load and stability</h2><div class='kpis'>" + "".join(f"<div><b>{esc(b)}</b><span>{esc(s)}</span></div>" for b, s in [
         (f"{rq_n:,}" if rq_n is not None else "n/a", f"{rq_lbl} sent"),
         (f"{rq_rate:.1f}/s" if rq_rate is not None else "n/a", "average request rate"),
