@@ -13,7 +13,7 @@ Always run through `tools/runk6.py`. Never call `k6 run` directly. The wrapper c
 2. `python tools/envconf.py check`, `python tools/brd.py check`, `python tools/catalogue.py check` and `python tools/k6check.py` for the project must pass. Tell the user which environment is active (`python tools/envconf.py show <project>`) before running. If not, stop and tell the user.
 
 ## Procedure
-1. Ask the user how many users and what durations they want if they did not say. Use exactly what they choose; do not raise it. Default shape for a small run: 30s ramp-up, 3m steady, 30s ramp-down.
+1. If the active environment has an approved `run_plan` (`approved_note` filled), use its `load_steps` and durations without asking again. Otherwise ask the user how many users and what durations they want if they did not say. Use exactly what they choose; do not raise it. Default shape for a small run: 30s ramp-up, 3m steady, 30s ramp-down.
 2. Smoke first (1 user, 1 pass): `python tools/runk6.py projects/<client>/<app> --profile smoke`
 3. If smoke outcome is `passed`, run the load test the user chose:
    `python tools/runk6.py projects/<client>/<app> --profile load --vus <N> --ramp-up 30s --steady 3m --ramp-down 30s`
@@ -23,7 +23,7 @@ Always run through `tools/runk6.py`. Never call `k6 run` directly. The wrapper c
    - `aborted_by_threshold`: a safety rule stopped the run early (error rate, slow responses, or 429/503/CDN block). Say which, and do NOT re-run automatically.
    - `error`: the script or k6 failed. Show the last lines of `k6-output.txt`.
 5. Load runs also save `dashboard.html` (k6 charts) in the run folder; during a run it is live at http://localhost:5665. `runk6.py` also builds `report.html` automatically after every run, including aborted ones (see the `REPORT:` line). Give the user the report path; pass `--open` only if the user asks to have it opened in the browser.
-6. Ask the user before any further run. A bigger run only happens when the user asks for it.
+6. Under an approved `run_plan`, run its next load step after a completed run (passed, or thresholds missed when `pack_if_targets_missed` is true). Stop and ask after an abort, an error, or when the plan has no more steps. Without a plan, ask the user before any further run.
 7. Update `STATE.md` (stage "8. Run", latest run id and outcome).
 
 ## Rules

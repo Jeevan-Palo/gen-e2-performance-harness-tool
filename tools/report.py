@@ -14,6 +14,14 @@ def blank(v): return v is None or v == "" or v == [] or v == {}
 def ms(v): return f"{v:,.0f} ms" if v >= 10 else f"{v:,.1f} ms"
 def sha(p): return hashlib.sha256(open(p, "rb").read()).hexdigest()[:16] if os.path.exists(p) else "missing"
 
+def req_stats(M):
+    """(count, rate_per_s, failed_rate, label). Browser-module runs emit browser_http_req_* instead of http_req*."""
+    if "http_reqs" in M or "http_req_failed" in M:
+        return (M.get("http_reqs") or {}).get("count"), (M.get("http_reqs") or {}).get("rate"), (M.get("http_req_failed") or {}).get("value"), "requests"
+    b = M.get("browser_http_req_failed")
+    if b: return int(b.get("passes", 0)) + int(b.get("fails", 0)), None, b.get("value"), "browser requests"
+    return None, None, None, "requests"
+
 def pick_run(d, run_id, env_name):
     rd = os.path.join(d, "runs")
     if not os.path.isdir(rd): sys.exit("No runs/ folder yet. Run a test first with tools/runk6.py.")
@@ -203,6 +211,7 @@ def build(d, run_id=None):
         if m and "p(95)" in v: rows.append({"id": m.group(1), "label": m.group(1), "p95": v["p(95)"], "p99": v.get("p(99)", v["p(95)"]), **targets.get(m.group(1), {})})
     rows.sort(key=lambda r: r["id"])
     g = lambda k, f="value": (M.get(k) or {}).get(f)
+    rq_n, rq_rate, rq_fail, rq_lbl = req_stats(M)
     dash = os.path.exists(os.path.join(rdir, "dashboard.html"))
     mp = os.path.join(rdir, "monitoring.json"); mon = json.load(open(mp)) if os.path.exists(mp) else None
     P = []
@@ -228,9 +237,9 @@ def build(d, run_id=None):
         P.append(f"<tr><td>{esc(r['id'])} {esc(tx_names.get(r['id'],''))}</td><td class='n'>{esc(share.get(r['id'],'&ndash;'))}</td>" + "".join(f"<td class='n'>{esc(ms(v[k])) if k in v else '&ndash;'}</td>" for k in ("avg", "med", "p(90)", "p(95)", "p(99)", "max")) + "</tr>")
     P.append("</table><p class='muted'>A transaction is timed from its first request to the last response, as defined in the BRD. All timings are measured by the load tool (client side).</p>")
     P.append("<h2>3. Load and stability</h2><div class='kpis'>" + "".join(f"<div><b>{esc(b)}</b><span>{esc(s)}</span></div>" for b, s in [
-        (f"{g('http_reqs','count'):,}" if g('http_reqs','count') is not None else "n/a", "requests sent"),
-        (f"{g('http_reqs','rate'):.1f}/s" if g('http_reqs','rate') is not None else "n/a", "average request rate"),
-        (f"{(g('http_req_failed') or 0)*100:.2f}%", "requests failed"),
+        (f"{rq_n:,}" if rq_n is not None else "n/a", f"{rq_lbl} sent"),
+        (f"{rq_rate:.1f}/s" if rq_rate is not None else "n/a", "average request rate"),
+        (f"{(rq_fail or 0)*100:.2f}%", f"{rq_lbl} failed"),
         (f"{int(g('blocked_responses','count') or 0)}", "blocked or throttled (429/503)"),
         (f"{int(g('iterations','count') or 0):,}", "user journeys completed"),
         (f"{int(g('vus_max') or 0)}", "peak virtual users"),

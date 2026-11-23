@@ -1,0 +1,35 @@
+{
+ "environment": "test",
+ "base_url": "https://www.saucedemo.com",
+ "checked_utc": "2026-11-23T05:57:50Z",
+ "calls_ok": 1,
+ "calls_differ": 0,
+ "calls_skipped": 3,
+ "results": [
+  {
+   "id": "API-001",
+   "call": "GET /",
+   "status": 200,
+   "ms": 55,
+   "result": "ok"
+  },
+  {
+   "id": "API-002",
+   "call": "GET /inventory.html",
+   "result": "skipped",
+   "detail": "needs login, credentials are not stored"
+  },
+  {
+   "id": "API-003",
+   "call": "GET /inventory.html",
+   "result": "skipped",
+   "detail": "safe_to_load=conditional"
+  },
+  {
+   "id": "API-004",
+   "call": "GET /checkout-complete.html",
+   "result": "skipped",
+   "detail": "safe_to_load=conditional"
+  }
+ ]
+}

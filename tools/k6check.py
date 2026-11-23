@@ -52,8 +52,15 @@ def main():
     if "BASE_URL" in code and "PROFILE" not in code: P.append("No smoke/load PROFILE switch; a smoke run must be possible before a load run")
 
     active_tx = {t.get("id") for t in (brd.get("transactions") or []) if t.get("id")}
-    ids = {a["id"] for a in cat.get("apis", []) if a.get("transaction") in active_tx}
-    flow_ids = {s for f in (cat.get("flows") or []) if f.get("transaction") in active_tx for s in (f.get("steps") or []) + (f.get("parallel") or [])}
+    ids = {a["id"] for a in cat.get("apis", []) if a.get("transaction") in active_tx and a.get("safe_to_load") not in ("no", "conditional")}
+    flow_ids = set()
+    api_by_id = {a.get("id"): a for a in (cat.get("apis") or [])}
+    for f in (cat.get("flows") or []):
+        if f.get("transaction") in active_tx:
+            for s in (f.get("steps") or []) + (f.get("parallel") or []):
+                a = api_by_id.get(s)
+                if a and a.get("safe_to_load") not in ("no", "conditional"):
+                    flow_ids.add(s)
     for i in sorted(ids | flow_ids):
         if not re.search(rf"['\"]{re.escape(i)}['\"]", code): P.append(f"Catalogue API {i} is not called in the script (no tag api: '{i}')")
     for t in sorted(active_tx):

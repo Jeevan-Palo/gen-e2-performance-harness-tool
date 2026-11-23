@@ -22,7 +22,9 @@ Start from `.github/skills/k6-script-builder/reference-skeleton.js` (tested). Ke
    - Values one call needs from another (ids, tokens) follow `dynamic_values` in the catalogue. If a transaction starts without them, collect them in `setup()` (untimed) and never time the setup calls.
    - Test data (search terms, ids) only from values in the catalogue or given by the user. Never real personal data.
    - Calls with `safe_to_load` of `no` or `conditional`, or deferred transactions, are not in the script.
+   - Client-side apps (discovery found no backend API for login or other transactions, or pages return 404 without the browser session): only with the user's approval, drive the flow with the `k6/browser` module (`options: { browser: { type: 'chromium' } }` per scenario). Time each transaction into `transaction_duration`, record failures in a `transaction_failed` Rate (map the error-rate requirement to it), and read login names from the variables listed in `credentials_env_vars`. Never time an empty transaction.
 4. Thresholds in `options.thresholds`:
+   - Requirement and abort thresholds apply to the load profile only. The smoke profile gates on function only: `checks: ['rate==1']`, `http_req_failed: ['rate==0']` and `blocked_responses`. A slow but working system must still pass smoke; its speed is judged under load (see the skeleton's `PERF_THRESHOLDS`).
    - One threshold per active requirement on `transaction_duration{transaction:Tx}` (response time, with the percentile and value from the BRD in milliseconds) or `http_req_failed` (error rate).
    - Abort conditions from the BRD as `{ threshold, abortOnFail: true, delayAbortEval }` entries: error rate, response time (for example 3x target), and `blocked_responses` (429, 503, CDN/WAF block) which aborts immediately.
    - Per-request metrics (`http_req_duration{api:...}`) are for diagnosis only; put no pass/fail thresholds on them.

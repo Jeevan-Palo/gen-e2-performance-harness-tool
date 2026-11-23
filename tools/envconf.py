@@ -27,6 +27,32 @@ def get_env(d, name=None):
     name = name or cfg.get("active")
     return name, (cfg.get("environments") or {}).get(name)
 
+def secs(s):
+    m = re.fullmatch(r"\s*(\d+)\s*([smh]?)\s*", str(s or ""))
+    return int(m.group(1)) * {"": 1, "s": 1, "m": 60, "h": 3600}[m.group(2)] if m else None
+
+def plan(e):
+    """The environment's approved run plan, or None when no plan or no approval note exists."""
+    rp = (e or {}).get("run_plan") or {}
+    if not isinstance(rp, dict) or blank(str(rp.get("approved_note") or "").strip()): return None
+    return {"approved_note": rp["approved_note"], "discovery_actions": list(rp.get("discovery_actions") or []),
+            "load_steps": list(rp.get("load_steps") or []), "ramp_up": str(rp.get("ramp_up") or "30s"), "steady": str(rp.get("steady") or "3m"),
+            "ramp_down": str(rp.get("ramp_down") or "30s"), "pack_if_targets_missed": rp.get("pack_if_targets_missed") is True}
+
+def plan_problems(n, e):
+    P = []; rp = plan(e)
+    if rp is None: return P
+    steps = rp["load_steps"]
+    if not all(isinstance(s, int) and s > 0 for s in steps): return [f"{n}: run_plan.load_steps must be positive whole numbers"]
+    for i, s in enumerate(steps):
+        if isinstance(e.get("max_vus"), int) and s > e["max_vus"]: P.append(f"{n}: run_plan.load_steps {s} exceeds max_vus={e['max_vus']}")
+        if i == 0 and s > 5: P.append(f"{n}: run_plan.load_steps must start at 5 users or fewer")
+        if i > 0 and not steps[i - 1] < s <= steps[i - 1] * 2: P.append(f"{n}: run_plan.load_steps must increase by at most 2x each step ({steps[i - 1]} -> {s})")
+    d = [secs(rp[k]) for k in ("ramp_up", "steady", "ramp_down")]
+    if None in d: P.append(f"{n}: run_plan durations must look like 30s, 3m or 1h")
+    elif isinstance(e.get("max_run_minutes"), int) and sum(d) > e["max_run_minutes"] * 60: P.append(f"{n}: run_plan durations ({sum(d)}s) exceed max_run_minutes={e['max_run_minutes']}")
+    return P
+
 def problems(cfg):
     P, W = [], []
     envs = cfg.get("environments") or {}
@@ -56,6 +82,7 @@ def problems(cfg):
         for v in e.get("credentials_env_vars") or []:
             if not re.fullmatch(r"[A-Z][A-Z0-9_]*", str(v)): P.append(f"{n}: credentials_env_vars must hold variable NAMES (like APP_USER), not values")
         if re.search(r"(?i)(password|secret|token|api[_-]?key)\s*:", yaml.safe_dump(e).replace("credentials_env_vars", "")): P.append(f"{n}: looks like a credential key; store only env var names")
+        P += plan_problems(n, e)
         if e.get("authorisation") == "not_confirmed": W.append(f"{n}: authorisation is not_confirmed, so runs are blocked on it")
     return P, W
 

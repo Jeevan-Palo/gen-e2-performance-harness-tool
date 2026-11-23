@@ -22,6 +22,14 @@ environments:
     credentials_env_vars: []         # e.g. [APP_USER, APP_PASSWORD]  (names only)
     known_differences: ""            # known differences from the API catalogue / other environments
     verified: {date: "", by: "", note: ""}    # last check that this environment matches the catalogue
+    run_plan:                        # approved once by the test lead so the end-to-end flow does not stop at every step
+      approved_note: ""              # the test lead's own statement and date; the plan is used only when this is filled
+      discovery_actions: []          # write actions allowed once each during browser discovery, e.g. [login, add to cart, checkout]
+      load_steps: []                 # users per load run, in order, e.g. [2, 4, 5]; first <= 5, then at most 2x, never above max_vus
+      ramp_up: 30s
+      steady: 3m
+      ramp_down: 30s
+      pack_if_targets_missed: false  # true: a load run that completed but missed targets still goes into the report and client pack
   example-remote:
     description: ""
     type: staging

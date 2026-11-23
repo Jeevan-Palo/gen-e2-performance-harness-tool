@@ -1,0 +1,182 @@
+
+         /\      Grafana   /‾‾/  
+    /\  /  \     |\  __   /  /   
+   /  \/    \    | |/ /  /   ‾‾\ 
+  /          \   |   (  |  (‾)  |
+ / __________ \  |_|\_\  \_____/ 
+
+
+     execution: local
+        script: projects/HRM/orangehrm/k6/script.js
+        output: -
+
+     scenarios: (100.00%) 1 scenario, 1 max VUs, 2m30s max duration (incl. graceful stop):
+              * smoke: 1 iterations for each of 1 VUs (maxDuration: 2m0s, exec: smokeAll, gracefulStop: 30s)
+
+
+running (0m01.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m01.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m02.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m02.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m03.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m03.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m04.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m04.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m05.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m05.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m06.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m06.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m07.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m07.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m08.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m08.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m09.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m09.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m10.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m10.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m11.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m11.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m12.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m12.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m13.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m13.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m14.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m14.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m15.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m15.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m16.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m16.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m17.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m17.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m18.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m18.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m19.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m19.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m20.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m20.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m21.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m21.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m22.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m22.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m23.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m23.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m24.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m24.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m25.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m25.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m26.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m26.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m27.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m27.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m28.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m28.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m29.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m29.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m30.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m30.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m31.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m31.0s/2m0s  0/1 iters, 1 per VU
+
+running (0m32.0s), 1/1 VUs, 0 complete and 0 interrupted iterations
+smoke   [   0% ] 1 VUs  0m32.0s/2m0s  0/1 iters, 1 per VU
+
+
+  █ THRESHOLDS 
+
+    blocked_responses
+    ✓ 'count<1' count=0
+
+    http_req_failed
+    ✓ 'rate<0.01' rate=0.00%
+    ✓ 'rate<0.05' rate=0.00%
+
+    transaction_duration{transaction:T1}
+    ✗ 'p(95)<3000' p(95)=6.25s
+    ✓ 'p(95)<10000' p(95)=6.25s
+
+    transaction_duration{transaction:T2}
+    ✓ 'p(95)<3000' p(95)=2.58s
+    ✓ 'p(95)<10000' p(95)=2.58s
+
+    transaction_duration{transaction:T3}
+    ✓ 'p(95)<3000' p(95)=2.39s
+    ✓ 'p(95)<10000' p(95)=2.39s
+
+    transaction_duration{transaction:T4}
+    ✓ 'p(95)<3000' p(95)=1.7s
+    ✓ 'p(95)<10000' p(95)=1.7s
+
+    transaction_failed
+    ✓ 'rate<0.01' rate=0.00%
+
+
+  █ TOTAL RESULTS 
+
+    checks_total.......: 22      0.667854/s
+    checks_succeeded...: 100.00% 22 out of 22
+    checks_failed......: 0.00%   0 out of 22
+
+    ✓ status is 2xx
+    ✓ logged in
+
+    CUSTOM
+    blocked_responses..............: 0      0/s
+    transaction_duration...........: avg=3.23s  min=1.7s     med=2.48s    max=6.25s  p(90)=5.15s  p(95)=5.7s   p(99)=6.14s 
+      { transaction:T1 }...........: avg=6.25s  min=6.25s    med=6.25s    max=6.25s  p(90)=6.25s  p(95)=6.25s  p(99)=6.25s 
+      { transaction:T2 }...........: avg=2.58s  min=2.58s    med=2.58s    max=2.58s  p(90)=2.58s  p(95)=2.58s  p(99)=2.58s 
+      { transaction:T3 }...........: avg=2.39s  min=2.39s    med=2.39s    max=2.39s  p(90)=2.39s  p(95)=2.39s  p(99)=2.39s 
+      { transaction:T4 }...........: avg=1.7s   min=1.7s     med=1.7s     max=1.7s   p(90)=1.7s   p(95)=1.7s   p(99)=1.7s  
+    transaction_failed.............: 0.00%  0 out of 4
+
+    HTTP
+    http_req_duration..............: avg=1.13s  min=585.97ms med=989.95ms max=1.97s  p(90)=1.7s   p(95)=1.75s  p(99)=1.92s 
+      { expected_response:true }...: avg=1.13s  min=585.97ms med=989.95ms max=1.97s  p(90)=1.7s   p(95)=1.75s  p(99)=1.92s 
+    http_req_failed................: 0.00%  0 out of 23
+    http_reqs......................: 23     0.698211/s
+
+    EXECUTION
+    iteration_duration.............: avg=32.94s min=32.94s   med=32.94s   max=32.94s p(90)=32.94s p(95)=32.94s p(99)=32.94s
+    iterations.....................: 1      0.030357/s
+    vus............................: 1      min=1       max=1
+    vus_max........................: 1      min=1       max=1
+
+    NETWORK
+    data_received..................: 118 kB 3.6 kB/s
+    data_sent......................: 16 kB  472 B/s
+
+
+
+
+running (0m32.9s), 0/1 VUs, 1 complete and 0 interrupted iterations
+smoke ✓ [ 100% ] 1 VUs  0m32.9s/2m0s  1/1 iters, 1 per VU
+time="2026-11-23T14:53:10+08:00" level=error msg="thresholds on metrics 'transaction_duration{transaction:T1}' have been crossed"

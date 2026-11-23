@@ -10,9 +10,9 @@
 ## Use it
 1. In Copilot Chat (Agent mode) type `/start-project` and answer the client and application name.
 2. Put the client's files in `projects/<client>/<app>/sources/`.
-3. Tell Copilot: "Sources are ready. Run requirements-intake, then brd-builder."
-4. Answer its questions. It stops when `tools/brd.py check` reports no missing must-haves or you tell it to proceed with open items.
-5. Review `brd.md` and `open-items.md` before anything goes to the client.
+3. Confirm the source files are ready and provide the environment details if requested.
+4. `/start-project` continues the end-to-end flow through catalogue, script, smoke/load, report and client pack. It stops for human decisions, as listed by `end-to-end`.
+5. Answer one message: the business facts the client knows (each question has a copy-paste example), reply `accept` to the advised technical values (think time, traffic mix, targets, abort limits, test windows), and approve the run plan (load steps, durations, discovery actions, build the pack if targets are missed). After that the flow runs to the client pack, stopping only for authorisation, a failed smoke run, an aborted run or something outside the plan.
 
 ## Environments
 Each project has `environments.yaml`: one block per environment (local, test, public, ...) with URL, owner, authorisation, limits, monitoring and test windows. Switch with `python tools/envconf.py use <project_dir> <name>`, and validate with `python tools/envconf.py check <project_dir>`. Runs are refused on an environment whose authorisation is `not_confirmed`.

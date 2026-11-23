@@ -46,7 +46,11 @@ def set_verified(envfile, name, date, by, note):
     j = i + 1
     while j < len(lines) and (lines[j].startswith("    ") or not lines[j].strip()):
         if lines[j].startswith("    verified:"):
-            lines[j] = "    verified: {date: \"%s\", by: \"%s\", note: \"%s\"}" % (date, by, note.replace('"', "'")); open(envfile, "w", encoding="utf-8").write("\n".join(lines)); return True
+            lines[j] = "    verified: {date: \"%s\", by: \"%s\", note: \"%s\"}" % (date, by, note.replace('"', "'"))
+            k = j + 1  # drop the block-style children of the old value (files rewritten by yaml.safe_dump)
+            while k < len(lines) and lines[k].startswith("      "): k += 1
+            del lines[j + 1:k]
+            open(envfile, "w", encoding="utf-8").write("\n".join(lines)); return True
         j += 1
     return False
 

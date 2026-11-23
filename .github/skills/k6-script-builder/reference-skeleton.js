@@ -27,14 +27,20 @@ const scenarios = PROFILE === 'smoke'
   : { load: { executor: 'ramping-vus', startVUs: 0, gracefulRampDown: '30s', exec: 'mixed',
               stages: [{ duration: RAMP_UP, target: MAX_VUS }, { duration: STEADY, target: MAX_VUS }, { duration: RAMP_DOWN, target: 0 }] } };
 
+// Smoke proves the script works (every check passes, no errors, no blocks); response-time targets
+// are judged only under load, so a slow but working system can still pass smoke.
+const PERF_THRESHOLDS = PROFILE === 'smoke' ? { checks: ['rate==1'], http_req_failed: ['rate==0'] } : {
+  // requirement thresholds (one line per active PR id; keep requirement-map.yaml in step with these)
+  'transaction_duration{transaction:T2}': ['p(95)<2000', 'p(99)<4000', { threshold: 'p(95)<6000', abortOnFail: true, delayAbortEval: '2m' }],
+  'transaction_duration{transaction:T1}': ['p(95)<2000', { threshold: 'p(95)<6000', abortOnFail: true, delayAbortEval: '2m' }],
+  http_req_failed: ['rate<0.01', { threshold: 'rate<0.02', abortOnFail: true, delayAbortEval: '1m' }],
+};
+
 export const options = {
   scenarios,
   thresholds: {
-    // requirement thresholds (one line per active PR id; keep requirement-map.yaml in step with these)
-    'transaction_duration{transaction:T2}': ['p(95)<2000', 'p(99)<4000', { threshold: 'p(95)<6000', abortOnFail: true, delayAbortEval: '2m' }],
-    'transaction_duration{transaction:T1}': ['p(95)<2000', { threshold: 'p(95)<6000', abortOnFail: true, delayAbortEval: '2m' }],
-    http_req_failed: ['rate<0.01', { threshold: 'rate<0.02', abortOnFail: true, delayAbortEval: '1m' }],
-    // abort on any sign of throttling or blocking
+    ...PERF_THRESHOLDS,
+    // abort on any sign of throttling or blocking (both profiles)
     blocked_responses: [{ threshold: 'count<1', abortOnFail: true }],
   },
 };

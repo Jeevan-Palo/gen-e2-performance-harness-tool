@@ -1,0 +1,35 @@
+active: test
+environments:
+  test:
+    description: OrangeHRM public open-source demo
+    type: public
+    base_url: https://opensource-demo.orangehrmlive.com
+    owner: Test lead
+    authorisation: accepted_by_test_lead
+    authorisation_note: User authorised testing this environment in chat on 2026-11-23
+    max_vus: 5
+    max_run_minutes: 30
+    test_windows: Weekdays 10:00-16:00 client local time, outside releases and batch jobs
+    monitoring:
+      source: none
+      detail: ''
+    comparison_with_production: ''
+    third_party_services: ''
+    test_data: Synthetic test accounts and standard catalogue products; data reset between runs
+    credentials_env_vars:
+    - ORANGEHRM_USERNAME
+    - ORANGEHRM_PASSWORD
+    known_differences: 'Login page path: /web/index.php/auth/login'
+    verified: {date: "2026-11-23", by: "tools/targetcheck.py", note: "1 of 1 read calls matched the catalogue (status and field names); 23 skipped (writes, logins or no value)"}
+    run_plan:
+      approved_note: 'Approved by the test lead in chat on 2026-11-23: steps 2, 5; 30s/3m/30s; discovery login; build pack if targets missed. Step 4 inserted by test lead to satisfy the 2x ramp guard'
+      discovery_actions:
+      - login
+      load_steps:
+      - 2
+      - 4
+      - 5
+      ramp_up: 30s
+      steady: 3m
+      ramp_down: 30s
+      pack_if_targets_missed: true

@@ -71,6 +71,12 @@ environments:
 
 
 class TestLint(unittest.TestCase):
+    def test_start_project_continues_to_client_pack(self):
+        prompt = open(os.path.join(ROOT, ".github", "prompts", "start-project.prompt.md"), encoding="utf-8").read()
+        self.assertIn("continue end to end through the client pack", prompt)
+        self.assertIn("tools/status.py", prompt)
+        self.assertIn("brd.py advise", prompt); self.assertIn("run plan", prompt)
+
     def test_repo_is_clean(self):
         rc, out = tool("lint.py"); self.assertEqual(rc, 0, out)
 
@@ -98,6 +104,42 @@ class TestBrdAndEnv(unittest.TestCase):
         self.assertIn("## 6. Performance requirements", md); self.assertIn("Authorisation to test", md)
     def test_unconfirmed_authorisation_is_a_gap(self):
         d = make_project(self.tmp, auth="not_confirmed"); rc, out = tool("brd.py", "check", os.path.join(d, "brd.yaml")); self.assertEqual(rc, 1); self.assertIn("not_confirmed", out)
+    def test_questions_only_report_current_gaps_and_deduplicate(self):
+        d = os.path.join(self.tmp, "projects", "Acme", "demo")
+        os.makedirs(d)
+        brd = os.path.join(d, "brd.yaml")
+        write(brd, """
+meta: {client: Acme, application: Demo}
+purpose: ""
+scope_in: [Demo]
+transactions:
+  - {id: T1, name: Browse, traffic_share: "", measure_start_end: ""}
+workload: {peak_window: "", think_time: "", basis: ""}
+requirements: [{id: PR-01, metric: response time, target: "", percentile: "", load_condition: ""}]
+test_types: []
+abort_conditions: []
+environment: {target: "", owner: "", test_data: "", personal_data_confirmation: "", monitoring_access: "", test_windows: ""}
+open_items: []
+""")
+        write(os.path.join(d, "environments.yaml"), """
+active: local
+environments:
+  local: {description: test, type: local, base_url: "http://127.0.0.1:1", owner: me, authorisation: not_confirmed, max_vus: 5, max_run_minutes: 5,
+          test_windows: "", test_data: "", monitoring: {source: none}, verified: {date: "", by: "", note: ""}}
+""")
+        rc, out = tool("brd.py", "questions", brd)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("field=purpose", out); self.assertIn("Example:", out)
+        for technical in ("traffic_share", "think_time", "abort_conditions", "requirements"): self.assertNotIn(technical, out)
+        self.assertNotIn("scope_in", out)
+        rc, out = tool("brd.py", "advise", brd)
+        for key in ("traffic_share", "think_time", "requirement", "abort", "test_windows"): self.assertIn(key, out)
+        rc, out = tool("brd.py", "advise", brd, "--apply", "--skip=think_time"); self.assertEqual(rc, 0, out)
+        rc, out = tool("brd.py", "check", brd)
+        self.assertIn("think time", out.lower()); self.assertIn("Purpose", out)
+        for gone in ("Traffic share", "Abort", "Test types", "test windows", "Requirement PR-01"): self.assertNotIn(gone, out)
+        d2 = yaml.safe_load(open(brd)); self.assertEqual(d2["transactions"][0]["traffic_share"], "100%")
+        self.assertTrue(any(r.get("type") == "Assumption" and "Advised" in r.get("description", "") for r in d2["risks"]))
     def test_environment_rules(self):
         import envconf
         ok = {"type": "local", "base_url": "http://h:1", "owner": "me", "authorisation": "not_required", "max_vus": 5, "max_run_minutes": 5, "monitoring": {"source": "none"}}
@@ -107,6 +149,14 @@ class TestBrdAndEnv(unittest.TestCase):
         bad = {"active": "a", "environments": {"a": {**ok, "monitoring": {"source": "docker_stats"}}}}; self.assertTrue(any("containers" in p for p in envconf.problems(bad)[0]))
         bad = {"active": "a", "environments": {"a": {**ok, "credentials_env_vars": ["hunter2pass"]}}}; self.assertTrue(envconf.problems(bad)[0])
         bad = {"active": "a", "environments": {"a": {**ok, "authorisation": "accepted_by_test_lead"}}}; self.assertTrue(any("authorisation_note" in p for p in envconf.problems(bad)[0]))
+    def test_run_plan_rules(self):
+        import envconf
+        ok = {"type": "local", "base_url": "http://h:1", "owner": "me", "authorisation": "not_required", "max_vus": 5, "max_run_minutes": 5, "monitoring": {"source": "none"}}
+        plan = {"approved_note": "QA lead in chat 2026-11-23", "load_steps": [2, 4], "ramp_up": "30s", "steady": "3m", "ramp_down": "30s"}
+        self.assertEqual(envconf.problems({"active": "a", "environments": {"a": {**ok, "run_plan": plan}}})[0], [])
+        for bad in ({"load_steps": [6]}, {"load_steps": [2, 5]}, {"steady": "10m"}):
+            self.assertTrue(envconf.problems({"active": "a", "environments": {"a": {**ok, "run_plan": {**plan, **bad}}}})[0], bad)
+        self.assertIsNone(envconf.plan({**ok, "run_plan": {**plan, "approved_note": ""}}))
 
 
 class TestCatalogueImports(unittest.TestCase):
@@ -140,6 +190,11 @@ class TestCatalogueImports(unittest.TestCase):
 class TestK6Check(unittest.TestCase):
     def setUp(self): self.tmp = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, self.tmp); self.d = make_project(self.tmp)
     def test_good_script_passes(self): rc, out = tool("k6check.py", self.d); self.assertEqual(rc, 0, out)
+    def test_conditional_api_is_not_required_in_script(self):
+        cat = yaml.safe_load(open(os.path.join(self.d, "api-catalogue.yaml")))
+        cat["apis"].append({"id": "API-999", "transaction": "T1", "safe_to_load": "conditional", "method": "POST", "path": "/conditional"})
+        yaml.safe_dump(cat, open(os.path.join(self.d, "api-catalogue.yaml"), "w"))
+        rc, out = tool("k6check.py", self.d); self.assertEqual(rc, 0, out)
     def test_wrong_threshold_fails(self):
         p = os.path.join(self.d, "k6", "script.js"); t = open(p).read().replace("p(99)<4000", "p(99)<9000"); open(p, "w").write(t)
         rc, out = tool("k6check.py", self.d); self.assertEqual(rc, 1); self.assertIn("PR-02", out)
@@ -150,6 +205,11 @@ class TestK6Check(unittest.TestCase):
 
 class TestReportAndPack(unittest.TestCase):
     def setUp(self): self.tmp = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, self.tmp)
+    def test_browser_runs_report_browser_request_failures(self):
+        import report
+        n, rate, failed, label = report.req_stats({"browser_http_req_failed": {"passes": 4, "fails": 26, "value": 0.1333}})
+        self.assertEqual((n, rate, failed, label), (30, None, 0.1333, "browser requests"))
+        self.assertEqual(report.req_stats({"http_reqs": {"count": 2, "rate": 1.0}, "http_req_failed": {"value": 0.5}})[:3], (2, 1.0, 0.5))
     def test_below_peak_is_not_judged(self):
         import report; d = make_project(self.tmp, runs=[("r-load-5", "load", 5, "passed", 80)]); page, f = report.build(d, "r-load-5")
         st = {x["r"]["id"]: x["status"] for x in f["res"]}
@@ -173,6 +233,24 @@ class TestReportAndPack(unittest.TestCase):
         d = make_project(self.tmp, runs=[]); rc, out = tool("status.py", d, "--json"); j = json.loads(out)
         self.assertEqual([s["done"] for s in j["stages"]][:3], [True, True, True]); self.assertEqual(j["next"]["n"], 4)
         e = os.path.join(self.tmp, "projects", "New", "app"); os.makedirs(e); rc, out = tool("status.py", e, "--json"); self.assertEqual(json.loads(out)["next"]["n"], 1)
+    def test_run_plan_lets_a_completed_run_with_missed_targets_finish_the_flow(self):
+        d = make_project(self.tmp, runs=[("20260101T000000Z-local-smoke-1vu", "smoke", 1, "passed", 50), ("r-miss", "load", 10, "thresholds_failed", 2500)])
+        rc, out = tool("status.py", d, "--json"); self.assertFalse(json.loads(out)["stages"][6]["done"])
+        rc, out = tool("clientpack.py", d); self.assertNotEqual(rc, 0)
+        envp = os.path.join(d, "environments.yaml"); cfg = yaml.safe_load(open(envp))
+        cfg["environments"]["local"]["run_plan"] = {"approved_note": "QA lead in chat 2026-11-23", "load_steps": [5, 10], "ramp_up": "30s", "steady": "3m", "ramp_down": "30s", "pack_if_targets_missed": True}
+        yaml.safe_dump(cfg, open(envp, "w"))
+        rc, out = tool("status.py", d, "--json"); self.assertTrue(json.loads(out)["stages"][6]["done"], out)
+        rc, out = tool("clientpack.py", d); self.assertEqual(rc, 0, out); self.assertTrue(any("r-miss" in n for n in os.listdir(os.path.join(d, "client-pack"))))
+    def test_status_accepts_explicit_open_items_decision(self):
+        d = make_project(self.tmp, runs=[])
+        brd = os.path.join(d, "brd.yaml")
+        text = open(brd, encoding="utf-8").read()
+        text = text.replace('status: Draft, prepared_by: QA', 'status: Draft, open_items_decision: proceed_with_open_items, prepared_by: QA')
+        open(brd, "w", encoding="utf-8").write(text)
+        rc, out = tool("status.py", d, "--json")
+        j = json.loads(out)
+        self.assertTrue(j["stages"][0]["done"])
 
 
 class TestMonitor(unittest.TestCase):
@@ -213,6 +291,12 @@ apis:
         self.assertEqual(json.load(open(os.path.join(d, "target-check.json")))["calls_ok"], 3)
     def test_refuses_when_not_confirmed(self):
         tmp = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, tmp); d = make_project(tmp, auth="not_confirmed"); rc, out = tool("targetcheck.py", d); self.assertNotEqual(rc, 0); self.assertIn("not_confirmed", out)
+    def test_verified_note_replaces_a_block_style_value(self):
+        import targetcheck
+        tmp = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, tmp); p = os.path.join(tmp, "environments.yaml")
+        yaml.safe_dump({"active": "t", "environments": {"t": {"base_url": "http://x", "verified": {"date": "", "by": "", "note": ""}, "max_vus": 5}}}, open(p, "w"), sort_keys=False)
+        self.assertTrue(targetcheck.set_verified(p, "t", "2026-01-01", "me", "ok"))
+        e = yaml.safe_load(open(p))["environments"]["t"]; self.assertEqual(e["verified"]["note"], "ok"); self.assertEqual(e["max_vus"], 5)
 
 
 @unittest.skipUnless(K6, "k6 is not installed")

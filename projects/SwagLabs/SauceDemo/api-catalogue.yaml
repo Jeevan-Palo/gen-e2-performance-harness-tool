@@ -1,0 +1,115 @@
+# Copy to projects/<client>/<app>/api-catalogue.yaml. Never guess. Never store secrets (tokens, passwords, cookies, keys).
+meta:
+  application: "SauceDemo"
+  base_url: "https://www.saucedemo.com/"
+  created: "2026-11-23"
+  brd_version: "0.1"
+  excluded_hosts: ["fonts.googleapis.com", "events.backtrace.io"]
+apis:
+  - id: "API-001"
+    name: "Browse SauceDemo login page"
+    method: "GET"
+    path: "/"
+    transaction: "T1"
+    step_order: 1
+    page: "Login page"
+    business_flow: "Open the SauceDemo application and present the login page"
+    auth: "none"
+    headers: {}             # only non-secret headers, e.g. Content-Type, Accept
+    query_params: []        # [{name, example, required}]
+    request_body: {}        # {content_type, example, notes}; sensitive values as "<redacted>"
+    response: {status: 200, content_type: "text/html", fields: [], notes: "Observed successful page load"}
+    dynamic_values: []      # correlation: [{name, from_api, json_path, used_in}]
+    depends_on: []          # ids of APIs that must run first
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "No data required"
+    observed_latency_ms: null
+    evidence:
+      source_type: "browser"
+      source: "https://www.saucedemo.com/"
+      confidence: "high"
+      observed_at: "2026-11-23"
+  - id: "API-002"
+    name: "Browse inventory page"
+    method: "GET"
+    path: "/inventory.html"
+    transaction: "T2"
+    step_order: 1
+    page: "Inventory / products"
+    business_flow: "Navigate to the products inventory after login"
+    auth: "cookie"
+    headers: {}
+    query_params: []
+    request_body: {}
+    response: {status: 200, content_type: "text/html", fields: [], notes: "Observed successful inventory navigation"}
+    dynamic_values: []
+    depends_on: ["API-001"]
+    safe_to_load: "yes"
+    side_effects: "none"
+    test_data: "Standard test account"
+    observed_latency_ms: null
+    evidence:
+      source_type: "browser"
+      source: "https://www.saucedemo.com/inventory.html"
+      confidence: "high"
+      observed_at: "2026-11-23"
+  - id: "API-003"
+    name: "Add first product to cart"
+    method: "GET"
+    path: "/inventory.html"
+    transaction: "T3"
+    step_order: 1
+    page: "Inventory / products"
+    business_flow: "Add a product to the client-side shopping cart"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {}
+    response: {status: 200, content_type: "text/html", fields: ["cart item count"], notes: "No network API call observed; cart count changed locally"}
+    dynamic_values: []
+    depends_on: ["API-002"]
+    safe_to_load: "conditional"
+    side_effects: "none observed"
+    test_data: "Standard test account"
+    observed_latency_ms: null
+    evidence:
+      source_type: "browser"
+      source: "https://www.saucedemo.com/inventory.html"
+      confidence: "high"
+      observed_at: "2026-11-23"
+  - id: "API-004"
+    name: "Complete checkout flow"
+    method: "GET"
+    path: "/checkout-complete.html"
+    transaction: "T4"
+    step_order: 1
+    page: "Checkout complete"
+    business_flow: "Complete checkout using synthetic customer details"
+    auth: "none"
+    headers: {}
+    query_params: []
+    request_body: {}
+    response: {status: 200, content_type: "text/html", fields: ["checkout complete message"], notes: "No application API call observed; completion page and cart reset were client-side"}
+    dynamic_values: []
+    depends_on: ["API-003"]
+    safe_to_load: "conditional"
+    side_effects: "none observed by network capture"
+    test_data: "Synthetic checkout values"
+    observed_latency_ms: null
+    evidence:
+      source_type: "browser"
+      source: "https://www.saucedemo.com/checkout-complete.html"
+      confidence: "high"
+      observed_at: "2026-11-23"
+flows:                      # business flow = ordered API ids per BRD transaction
+  - {transaction: "T1", steps: ["API-001"]}
+  - {transaction: "T2", steps: ["API-002"]}
+  - {transaction: "T3", steps: ["API-003"]}
+  - {transaction: "T4", steps: ["API-004"]}
+notes:
+  - "Login submission was performed once with a test account. No login API request was observed; navigation returned /inventory.html."
+  - "Add-to-cart was performed once with one product. It changed the cart state locally and produced no observed network API call."
+  - "Checkout was performed once with synthetic details and reached /checkout-complete.html. No checkout API call was observed."
+  - "API-002 needs the browser-side login session cookie (auth: cookie): plain HTTP without it returned 404 (target check 2026-11-23), so it is load-tested only through the k6 browser module."
+  - "Backtrace telemetry calls were observed from events.backtrace.io and excluded from load testing."

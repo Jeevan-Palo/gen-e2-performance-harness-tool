@@ -21,7 +21,9 @@ def main():
     add = lambda n, name, ok, detail, nxt: st.append({"n": n, "name": name, "done": ok, "detail": detail, "next": nxt})
     brdp = os.path.join(d, "brd.yaml"); brd = yaml.safe_load(open(brdp, encoding="utf-8")) or {} if os.path.exists(brdp) else {}
     ok, out = run("brd.py", "check", brdp) if os.path.exists(brdp) else (False, "brd.yaml does not exist")
-    add(1, "BRD complete", ok, "all must-have parameters present" if ok else out.splitlines()[0] + (f" (first: {out.splitlines()[1].strip()})" if len(out.splitlines()) > 1 else ""),
+    open_items_proceed = str((brd.get("meta") or {}).get("open_items_decision", "")).strip().lower() == "proceed_with_open_items"
+    brd_done = ok or open_items_proceed
+    add(1, "BRD complete", brd_done, "all must-have parameters present" if ok else ("must-have gaps recorded and user approved proceeding" if open_items_proceed else out.splitlines()[0] + (f" (first: {out.splitlines()[1].strip()})" if len(out.splitlines()) > 1 else "")),
         f"Copilot: /start-project (new project), then \"Sources are ready. Run requirements-intake, then brd-builder.\"" if not os.path.exists(brdp) else "Copilot: continue requirements-intake and answer its questions, then run brd-builder")
     name, env = envconf.get_env(d) if os.path.exists(envconf.path(d)) else (None, None)
     if env is None: add(2, "Environment defined", False, "environments.yaml missing or no active environment", "Copy templates/environments.template.yaml to environments.yaml and fill it in; only you set authorisation")
@@ -48,11 +50,19 @@ def main():
     add(6, "Smoke run passed (current script)", bool(sm), f"{len(sm)} passed smoke run(s) after the latest script" if sm else "none yet", f"Terminal: python tools/runk6.py {P} --profile smoke")
     pm = re.search(r"\d[\d,]*", str((brd.get("workload") or {}).get("peak_concurrent_users", ""))); peak = int(pm.group(0).replace(",", "")) if pm else 0
     cap = int((env or {}).get("max_vus", 0) or 0)
-    good = [x for x in runs if x[1]["profile"] == "load" and x[1]["outcome"] == "passed" and x[2] >= mtime(scr)]
+    rp = envconf.plan(env)
+    done_outcomes = ("passed", "thresholds_failed") if rp and rp["pack_if_targets_missed"] else ("passed",)
+    good = [x for x in runs if x[1]["profile"] == "load" and x[1]["outcome"] in done_outcomes and x[2] >= mtime(scr)]
     best = max([x[1]["vus"] for x in good] or [0]); goal = min(peak or cap, cap) if cap else peak
-    nxt_vus = max(1, min(5 if best == 0 else best * 2, goal or 5))
-    add(7, "Load stepped up to the peak", bool(good) and best >= goal > 0, f"highest passed load run: {best} users; peak in BRD: {peak or 'not stated'}; environment limit: {cap}",
-        f"Terminal: python tools/runk6.py {P} --profile load --vus {nxt_vus} --ramp-up 30s --steady 3m --ramp-down 30s   (you choose users and durations; the BRD says: {(brd.get('workload') or {}).get('peak_window', 'n/a')})")
+    missed = any(x[1]["outcome"] == "thresholds_failed" for x in good)
+    if rp and rp["load_steps"]:
+        goal = rp["load_steps"][-1]; nxt_vus = next((s for s in rp["load_steps"] if s > best), goal)
+        hint = f"(approved run plan: steps {rp['load_steps']})"; ru, sd, rdn = rp["ramp_up"], rp["steady"], rp["ramp_down"]
+    else:
+        nxt_vus = max(1, min(5 if best == 0 else best * 2, goal or 5)); ru, sd, rdn = "30s", "3m", "30s"
+        hint = f"(you choose users and durations; the BRD says: {(brd.get('workload') or {}).get('peak_window', 'n/a')})"
+    add(7, "Load stepped up to the peak", bool(good) and best >= goal > 0, f"highest completed load run: {best} users" + (" (targets missed; shown as Not met in the report)" if missed else "") + f"; peak in BRD: {peak or 'not stated'}; environment limit: {cap}",
+        f"Terminal: python tools/runk6.py {P} --profile load --vus {nxt_vus} --ramp-up {ru} --steady {sd} --ramp-down {rdn}   {hint}")
     top = sorted(good, key=lambda x: (x[1]["vus"], x[0]))[-1] if good else None
     rep = bool(top and os.path.exists(os.path.join(rd, top[0], "report.html")))
     add(8, "Report for the highest run", rep, f"report for {top[0]}" if rep else "no report yet", f"python tools/report.py {P} --run {top[0] if top else '<run-id>'}")

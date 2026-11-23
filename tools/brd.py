@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """BRD helper. Usage:
-  python tools/brd.py check  <brd.yaml>   list missing must-have parameters (exit 1 if any)
-  python tools/brd.py render <brd.yaml>   write brd.md next to the yaml
+  python tools/brd.py check     <brd.yaml>  list missing must-have parameters (exit 1 if any)
+  python tools/brd.py questions <brd.yaml>  list business questions for the client (with copy-paste examples)
+  python tools/brd.py advise    <brd.yaml> [--apply] [--skip=key,...]  advised values for technical gaps; --apply writes them
+  python tools/brd.py render    <brd.yaml>  write brd.md next to the yaml
 Requires PyYAML (pip install pyyaml).
 """
 import sys, os, yaml
@@ -72,6 +74,132 @@ def check(d):
             if blank(a.get("threshold")) or blank(a.get("action")):
                 m.append(f"Abort condition '{a.get('condition')}': threshold and action")
     return m
+
+# Business facts only the client can give. Each example is a realistic answer that can be copied and edited.
+QUESTION_MAP = [
+    ("purpose", ("purpose",), "purpose", "Why is performance testing needed now?", "Example: Black Friday sale on 28 Nov is expected to triple traffic; checkout slowed down during last year's sale"),
+    ("scope_in", ("scope_in",), "scope", "Which applications and user journeys are in scope?", "Example: Web shop (www.shop.com): login, search, product page, add to cart, checkout. Out of scope: admin portal"),
+    ("peak_load", ("workload", "peak_concurrent_users"), "peak concurrent", "How many users use the system at the busiest time?", "Example: 800 users online at the same time in the busiest hour (Google Analytics, Black Friday 2025). If unknown, say 'unknown' and we advise a value"),
+    ("target", ("environment", "target"), "target environment", "Which environment will be tested?", "Example: UAT, https://uat.shop.com (a copy of production, not used by real customers)"),
+    ("owner", ("environment", "owner"), "environment owner", "Who owns the target environment?", "Example: Priya Nair, Platform Lead, Infra team"),
+    ("client", ("meta", "client"), "client name", "What is the client or business unit name?", "Example: Acme Retail"),
+    ("application", ("meta", "application"), "application name", "What is the application or system name?", "Example: Acme Web Shop"),
+    ("transaction", ("transactions", "name"), "business transaction", "Which business transactions are in scope?", "Example: T1 Login, T2 Search product, T3 Add to cart, T4 Checkout (all by registered customers)"),
+    ("authorisation", ("environment", "_auth_status"), "authorisation", "Who authorises load testing in the active environment?", "Example: Approved by Priya Nair (environment owner) by email on 20 Nov 2026; only the human may decide"),
+]
+
+# Technical parameters clients rarely know. The test lead advises these (industry practice); the user accepts them once.
+ADVICE = {
+    "peak_window": ("workload.peak_window", "Busiest business hour; tested as 5 min ramp-up, 20 min steady load, 5 min ramp-down"),
+    "think_time": ("workload.think_time", "5 seconds between user actions"),
+    "basis": ("workload.basis", "assumed"),
+    "traffic_share": ("transactions[].traffic_share", "Equal split across the listed transactions"),
+    "measurement_point": ("transactions[].measure_start_end", "From the user action (click or page request) until the next page is fully loaded"),
+    "requirement": ("requirements", "p95 <= 3 s per transaction and error rate <= 1% at peak load"),
+    "test_types": ("test_types", "Baseline (single user) and Load: yes; Stress, Spike, Endurance, Scalability: no"),
+    "abort": ("abort_conditions", "Stop if error rate > 5% for 2 min, p95 > 10 s for 2 min, or any 429/503/WAF block"),
+    "personal_data": ("environment.personal_data_confirmation", "Yes: only synthetic test data is used; no real personal or payment data"),
+    "test_data": ("environments.yaml test_data", "Synthetic test accounts and standard catalogue products; data reset between runs"),
+    "test_windows": ("environments.yaml test_windows", "Weekdays 10:00-16:00 client local time, outside releases and batch jobs"),
+    "monitoring": ("environments.yaml monitoring", "none: client-side k6 metrics only; server CPU and memory added when APM access is granted"),
+    "peak_load": ("workload.peak_concurrent_users", "Up to the environment limit ({cap} concurrent users), stepped; real peak to be confirmed from analytics"),
+}
+ADVISE_TEXT = {"peak window": "peak_window", "think time": "think_time", "workload basis": "basis", "traffic share": "traffic_share",
+               "start/end": "measurement_point", "measurable performance requirement": "requirement", "test types": "test_types",
+               "abort": "abort", "personal/payment": "personal_data", "test data": "test_data", "test windows": "test_windows",
+               "monitoring access": "monitoring"}
+
+def unresolved_open_items(d):
+    return [" ".join(str(v) for v in r.values()).lower()
+            for r in (d.get("open_items") or []) if isinstance(r, dict)
+            and str(r.get("status", "")).strip().lower() == "open"]
+
+def category(label):
+    low = str(label).lower()
+    if low.startswith("requirement ") and any(k in low for k in (": target", ": percentile", ": load condition")): return "requirement"
+    for key, cat in [("purpose", "purpose"), ("in-scope", "scope_in"), ("peak load", "peak_load"), ("target environment", "target"),
+                     ("environment owner", "owner"), ("business transaction", "transaction"), ("authorisation", "authorisation")]:
+        if key in low: return cat
+    if low.startswith("client name"): return "client"
+    if low.startswith("application name"): return "application"
+    for key, cat in ADVISE_TEXT.items():
+        if key in low: return cat
+    return None
+
+def questions(d):
+    """Questions for business facts that are still missing (advised parameters are not asked; see advise)."""
+    cats = {category(x) for x in check(d)}
+    open_text = unresolved_open_items(d)
+    return [{"field": ".".join(path), "question": prompt, "format": example}
+            for cat, path, open_hint, prompt, example in QUESTION_MAP
+            if cat in cats and not any(open_hint in text for text in open_text)]
+
+def advice(d, cap=None):
+    """Advised values for missing technical parameters. Peak load is advised only after the client said it is unknown (open item)."""
+    cats = {category(x) for x in check(d)}
+    out = [{"key": k, "field": ADVICE[k][0], "value": ADVICE[k][1]} for k in ADVICE if k in cats and k != "peak_load"]
+    if "peak_load" in cats and cap and any("peak" in x and ("concurrent" in x or "load" in x or "users" in x) for x in unresolved_open_items(d)):
+        out.append({"key": "peak_load", "field": ADVICE["peak_load"][0], "value": ADVICE["peak_load"][1].format(cap=cap)})
+    return out
+
+def apply_advice(path, items, today):
+    """Write accepted advice into brd.yaml (and environment fields into environments.yaml), with evidence and one Assumption risk."""
+    folder = os.path.dirname(os.path.abspath(path))
+    raw = yaml.safe_load(open(path, encoding="utf-8")) or {}
+    src = f"advised by test lead (industry practice), accepted by user {today}"
+    ev = raw.setdefault("evidence", []) if isinstance(raw.get("evidence"), list) else raw.__setitem__("evidence", []) or raw["evidence"]
+    env_updates = {}
+    def setp(keys, value):
+        cur = raw
+        for k in keys[:-1]: cur = cur.setdefault(k, {}) if isinstance(cur.get(k), dict) else cur.__setitem__(k, {}) or cur[k]
+        cur[keys[-1]] = value; ev.append({"field": ".".join(keys), "source": src})
+    for it in items:
+        k = it["key"]
+        if k in ("peak_window", "think_time", "basis", "peak_load"):
+            setp(["workload", {"peak_window": "peak_window", "think_time": "think_time", "basis": "basis", "peak_load": "peak_concurrent_users"}[k]], it["value"])
+        elif k == "personal_data": setp(["environment", "personal_data_confirmation"], it["value"])
+        elif k in ("traffic_share", "measurement_point"):
+            tx = rows(raw.get("transactions"), ["name"]); n = len(tx) or 1
+            for i, tr in enumerate(tx):
+                if k == "traffic_share" and blank(tr.get("traffic_share")):
+                    tr["traffic_share"] = f"{100 // n + (1 if i < 100 % n else 0)}%"; ev.append({"field": f"transactions.{tr.get('id')}.traffic_share", "source": src})
+                if k == "measurement_point" and blank(tr.get("measure_start_end")):
+                    tr["measure_start_end"] = it["value"]; ev.append({"field": f"transactions.{tr.get('id')}.measure_start_end", "source": src})
+        elif k == "requirement":
+            rq = rows(raw.get("requirements"), ["metric", "target"])
+            if not rq:
+                tx = rows(raw.get("transactions"), ["name"])
+                rq = [{"id": f"PR-{i:02d}", "transaction": t.get("id"), "metric": "Response time", "target": "<= 3 s", "percentile": "p95", "load_condition": "peak load", "priority": "Must"} for i, t in enumerate(tx, 1)]
+                rq.append({"id": f"PR-{len(rq) + 1:02d}", "transaction": "All", "metric": "Error rate", "target": "<= 1%", "percentile": "n/a", "load_condition": "peak load", "priority": "Must"})
+                raw["requirements"] = rq
+            for r in rq:
+                for f, val in (("target", "<= 1%" if "error" in str(r.get("metric", "")).lower() else "<= 3 s"), ("percentile", "p95"), ("load_condition", "peak load")):
+                    if blank(r.get(f)) and not (f == "percentile" and str(r.get("metric", "")).lower() in ("error rate", "throughput", "availability")):
+                        r[f] = val; ev.append({"field": f"requirements.{r.get('id')}.{f}", "source": src})
+        elif k == "test_types":
+            tt = [t for t in (raw.get("test_types") or []) if isinstance(t, dict)]
+            if not tt: tt = [{"type": x, "needed": "", "notes": ""} for x in ("Baseline (single user)", "Load", "Stress", "Spike", "Endurance (soak)", "Scalability")]
+            for t in tt:
+                if blank(t.get("needed")): t["needed"] = "yes" if str(t.get("type", "")).lower().startswith(("baseline", "load")) else "no"
+            raw["test_types"] = tt; ev.append({"field": "test_types", "source": src})
+        elif k == "abort":
+            raw["abort_conditions"] = [
+                {"condition": "Error rate", "threshold": "> 5% for 2 consecutive minutes", "action": "Stop the test and notify the environment owner"},
+                {"condition": "Response time", "threshold": "p95 > 10 s for 2 consecutive minutes", "action": "Stop the test"},
+                {"condition": "Throttling or blocking", "threshold": "Any 429, 503 or WAF/CDN block response", "action": "Stop immediately"},
+                {"condition": "Request from operations or environment owner", "threshold": "Any stop request", "action": "Stop immediately"}]
+            ev.append({"field": "abort_conditions", "source": src})
+        elif k in ("test_data", "test_windows"): env_updates[k] = it["value"]
+        elif k == "monitoring": env_updates["monitoring"] = {"source": "none", "detail": it["value"].split(": ", 1)[-1]}
+    if items:
+        raw.setdefault("risks", []).append({"type": "Assumption", "description": "Advised values accepted by the user in place of client figures: " + ", ".join(i["field"] for i in items) + ".",
+                                            "owner": "Test lead", "impact": "Results show behaviour under advised settings; confirm with the client before sign-off"})
+    with open(path, "w", encoding="utf-8") as f: yaml.safe_dump(raw, f, sort_keys=False, allow_unicode=True, width=200)
+    if env_updates:
+        cfg = envconf.load(folder) or {}; e = (cfg.get("environments") or {}).get(cfg.get("active"))
+        if e is not None:
+            e.update(env_updates)
+            with open(envconf.path(folder), "w", encoding="utf-8") as f: yaml.safe_dump(cfg, f, sort_keys=False, allow_unicode=True, width=200)
 
 def _get(d, path):
     for p in path:
@@ -145,7 +273,7 @@ def render(d):
     return "\n".join(L) + "\n"
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] not in ("check", "render"):
+    if len(sys.argv) < 3 or sys.argv[1] not in ("check", "render", "questions", "advise"):
         sys.exit(__doc__)
     path = sys.argv[2]
     with open(path, encoding="utf-8") as f:
@@ -158,6 +286,27 @@ def main():
             for i, x in enumerate(miss, 1): print(f"  {i}. {x}")
             sys.exit(1)
         print("OK: all must-have parameters present.")
+    elif sys.argv[1] == "advise":
+        _, e = envconf.get_env(os.path.dirname(os.path.abspath(path)))
+        items = advice(d, (e or {}).get("max_vus"))
+        skip = {x for a in sys.argv[3:] if a.startswith("--skip=") for x in a[7:].split(",")}
+        items = [i for i in items if i["key"] not in skip]
+        if not items: print("NO ADVICE NEEDED: no advisable parameter is missing."); return
+        if "--apply" in sys.argv:
+            import datetime
+            apply_advice(path, items, datetime.date.today().isoformat())
+            print(f"APPLIED {len(items)} advised value(s) with evidence and one Assumption risk: " + ", ".join(i["key"] for i in items))
+        else:
+            print(f"ADVISED VALUES ({len(items)}); accept all with --apply, or leave some out with --skip=key1,key2:")
+            for i in items: print(f"  {i['key']:<18} {i['field']:<40} {i['value']}")
+    elif sys.argv[1] == "questions":
+        items = questions(d)
+        if not items:
+            print("NO QUESTIONS: all must-have parameters are present or already marked open.")
+        else:
+            print(f"QUESTIONS ({len(items)}):")
+            for i, item in enumerate(items, 1):
+                print(f"{i}. field={item['field']} | {item['question']} | {item['format']}")
     else:
         out = os.path.join(os.path.dirname(os.path.abspath(path)), "brd.md")
         with open(out, "w", encoding="utf-8") as f:

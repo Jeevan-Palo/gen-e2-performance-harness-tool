@@ -47,12 +47,13 @@ def list_runs(d, env_name):
             if j.get("env") == env_name: out.append((r, j))
     return out
 
-def choose(runs, peak, wanted):
+def choose(runs, peak, wanted, allow_missed=False):
     if wanted:
         for r, j in runs:
             if r == wanted: return r, j
         sys.exit(f"Run '{wanted}' not found for the active environment.")
-    ok = [x for x in runs if x[1].get("profile") == "load" and x[1].get("outcome") == "passed"]
+    outcomes = ("passed", "thresholds_failed") if allow_missed else ("passed",)  # thresholds_failed only under an approved run plan
+    ok = [x for x in runs if x[1].get("profile") == "load" and x[1].get("outcome") in outcomes]
     if not ok: sys.exit("No passed load run exists for the active environment. Run a load test first.")
     peak_ok = [x for x in ok if peak and x[1].get("vus", 0) >= peak]
     pool = peak_ok or ok
@@ -68,7 +69,7 @@ def main():
     if missing and not a.allow_incomplete: sys.exit("The BRD still has missing must-have parameters, so no client pack is built:\n  - " + "\n  - ".join(missing))
     pm = re.search(r"\d[\d,]*", str((brd.get("workload") or {}).get("peak_concurrent_users", ""))); peak = int(pm.group(0).replace(",", "")) if pm else 0
     runs = list_runs(d, active)
-    rid, run = choose(runs, peak, a.run)
+    rp = envconf.plan(envconf.get_env(d)[1]); rid, run = choose(runs, peak, a.run, bool(rp and rp["pack_if_targets_missed"]))
     page_main, F = rep.build(d, rid)
     meta, res = F["meta"], F["res"]; app = re.sub(r"[^A-Za-z0-9]+", "-", str(meta.get("application", "app"))).strip("-").lower()[:24].strip("-")
     root = os.path.join(d, "client-pack", f"{app}-{rid}")
@@ -95,6 +96,7 @@ def main():
     # cover
     run_, env = F["run"], F["env"]; mon = F["mon"]; M = F["M"]
     fval = lambda k, f="value": (M.get(k) or {}).get(f)
+    rq = rep.req_stats(M)
     tx_ids = [r["id"] for r in F["rows"]]
     h = [f"<h1>Performance test results</h1><p class='muted'>{esc(meta.get('application'))} &middot; {esc(meta.get('client'))}</p>"]
     h.append("<div class='meta'>" + "".join(f"<div><b>{esc(k)}</b>{esc(v)}</div>" for k, v in [
@@ -103,7 +105,7 @@ def main():
         ("Prepared by", meta.get("prepared_by") or "not stated"), ("Pack created", now().strftime("%Y-%m-%d %H:%M UTC"))]) + "</div>")
     h.append(f"<div class='banner {F['vcls']}'><b>{esc(F['vtxt'])}</b><small>{esc(F['vsub'])}</small></div>")
     dur = f"ramp-up {run_.get('ramp_up')}, steady {run_.get('steady')}, ramp-down {run_.get('ramp_down')}"
-    h.append(f"<h2>Summary</h2><p>The test ran {esc(run_.get('vus'))} concurrent users ({esc(dur)}) against the <b>{esc(run_.get('env'))}</b> environment. It sent {int(fval('http_reqs','count') or 0):,} requests; {(fval('http_req_failed') or 0)*100:.2f}% failed and {int(fval('blocked_responses','count') or 0)} were blocked or throttled. Every figure below is read directly from the load tool's output files.</p>")
+    h.append(f"<h2>Summary</h2><p>The test ran {esc(run_.get('vus'))} concurrent users ({esc(dur)}) against the <b>{esc(run_.get('env'))}</b> environment. It sent {int(rq[0] or 0):,} {rq[3]}; {(rq[2] or 0)*100:.2f}% failed and {int(fval('blocked_responses','count') or 0)} were blocked or throttled. Every figure below is read directly from the load tool's output files.</p>")
     h.append("<h2>Requirement results</h2><table><tr><th>ID</th><th>Requirement</th><th>Priority</th><th>Result</th><th>Measured</th></tr>")
     cls = {"Met": "met", "Not met": "notmet", "Not measured at peak load": "nm", "Not measured": "nm", "Deferred": "def"}
     for x in res:
@@ -117,7 +119,7 @@ def main():
     h.append("</table>")
     h.append("<h2>How the load was stepped up</h2><table><tr><th>Run (UTC start)</th><th class='n'>Users</th><th>Profile</th><th>Outcome</th><th class='n'>Requests</th><th class='n'>Failed</th>" + "".join(f"<th class='n'>{esc(t)} p95</th>" for t in tx_ids) + "<th>Report</th></tr>")
     for r, j, MM in sorted(hist, key=lambda x: x[1].get("start_utc", "")):
-        h.append(f"<tr><td>{esc(j.get('start_utc'))}</td><td class='n'>{esc(j.get('vus'))}</td><td>{esc(j.get('profile'))}</td><td>{esc(j.get('outcome'))}</td><td class='n'>{int((MM.get('http_reqs') or {}).get('count') or 0):,}</td><td class='n'>{((MM.get('http_req_failed') or {}).get('value') or 0)*100:.2f}%</td>" + "".join(f"<td class='n'>{esc(rep.ms(MM[f'transaction_duration{{transaction:{t}}}']['p(95)'])) if f'transaction_duration{{transaction:{t}}}' in MM else '&ndash;'}</td>" for t in tx_ids) + f"<td><a href='runs/{esc(r)}/report.html'>open</a></td></tr>")
+        h.append(f"<tr><td>{esc(j.get('start_utc'))}</td><td class='n'>{esc(j.get('vus'))}</td><td>{esc(j.get('profile'))}</td><td>{esc(j.get('outcome'))}</td><td class='n'>{int(rep.req_stats(MM)[0] or 0):,}</td><td class='n'>{(rep.req_stats(MM)[2] or 0)*100:.2f}%</td>" + "".join(f"<td class='n'>{esc(rep.ms(MM[f'transaction_duration{{transaction:{t}}}']['p(95)'])) if f'transaction_duration{{transaction:{t}}}' in MM else '&ndash;'}</td>" for t in tx_ids) + f"<td><a href='runs/{esc(r)}/report.html'>open</a></td></tr>")
     h.append("</table>" + (f"<p class='muted'>{excluded} run(s) that failed before producing results are not listed.</p>" if excluded else ""))
     if mon and mon.get("samples"):
         h.append("<h2>Server resources during the selected run</h2><p class='muted'>CPU % follows Docker: 100% = one full core. Averages cover the steady phase.</p><table><tr><th>Component</th><th class='n'>CPU avg</th><th class='n'>CPU p95</th><th class='n'>CPU max</th><th class='n'>Memory avg</th><th class='n'>Memory max</th></tr>")

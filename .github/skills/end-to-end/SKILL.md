@@ -1,6 +1,6 @@
 ---
 name: end-to-end
-description: Run the whole performance-testing flow for a project by looping on tools/status.py. Do the next unfinished stage with the right skill or tool, stop at every human decision, and resume from the files after any interruption. Use when the user says to start or continue a project end to end.
+description: Run the whole performance-testing flow for a project by looping on tools/status.py. Do the next unfinished stage with the right skill or tool, stop only at the human decisions listed below, and resume from the files after any interruption. Use when the user says to start or continue a project end to end.
 ---
 
 # End to end
@@ -25,12 +25,18 @@ description: Run the whole performance-testing flow for a project by looping on 
 | 8 Report | Built automatically after each run; if missing, `tools/report.py` | `report-builder` |
 | 9 Client pack | `tools/clientpack.py <project>` | `client-pack` |
 
-## Always stop and ask the user
-- Stage 1: any missing or conflicting requirement value. Ask in groups of at most 5, never guess.
-- Stage 2: the environment URL, owner, limits and the `authorisation` value. Only the user sets authorisation; record their statement and the date in `authorisation_note`.
-- Stage 3: any write action during discovery needs the user's approval for that exact action. If the environment is blocked (`not_confirmed`), do not browse it.
-- Stage 4: if the target check shows differences, show them. Do not change the catalogue to fit without asking.
-- Stage 7: before every load run, tell the user the next allowed step and ask how many users and which durations. Use exactly what they choose. After each run, report the outcome, p95 and p99, CPU and memory, and ask whether to step up. Never repeat an aborted or failed run on your own.
+## Run plan (ask once, at the start)
+Ask in the same message as the stage 1 questions, so the flow then runs without stopping. Write the answer into the active environment's `run_plan` in `environments.yaml`, with the user's own statement and date in `approved_note`. Ready-to-accept example:
+`load_steps: [2, 4, 5]`, `ramp_up: 30s`, `steady: 3m`, `ramp_down: 30s`, `discovery_actions: [login, add to cart, checkout]`, `pack_if_targets_missed: true`.
+Steps must respect `max_vus` (first step at most 5, then at most 2x); `envconf.py check` enforces this.
+
+## Stop and ask the user only for
+- Stage 1: the business facts and the "accept advised values" reply (see `requirements-intake`), in one message. Never ask a field twice.
+- Stage 2: the environment URL and owner if not given, and the `authorisation` value. Only the user sets authorisation; record their statement and date in `authorisation_note`.
+- Stage 3: a write action during discovery that is not in `run_plan.discovery_actions`. If the environment is `not_confirmed`, do not browse it.
+- Stage 4: a target-check difference you cannot explain from the catalogue (for example a page that needs a login is not a difference: set its `auth` and re-run the check). Do not change the catalogue to hide a real difference.
+- Stage 5: an app with no backend APIs needs the k6 browser module; this is allowed when the plan or the user approves it (see `k6-script-builder`).
+- Stage 6/7: a smoke run that fails, any aborted or errored run, or no approved run plan (then ask for users and durations). Never repeat an aborted or failed run on your own. With a plan, run its steps in order and report each outcome (p95, p99, CPU, memory) in one or two lines.
 - Stage 9: after building the pack, tell the user to read the cover page before sharing it. Never share, send or upload it.
 
 ## Never
