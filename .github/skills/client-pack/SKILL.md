@@ -8,11 +8,11 @@ description: Build the client pack (cover summary, BRD as HTML, every run's repo
 The pack is built only by `tools/clientpack.py`. It writes `projects/<client>/<app>/client-pack/<app>-<run-id>/` (open `index.html`) and a `.zip` next to it. It sends nothing anywhere.
 
 ## Procedure
-1. Check that the BRD and a passed load run exist: `python tools/brd.py check` and the `runs/` folder. If the BRD has missing must-haves, the tool refuses; tell the user what is missing.
+1. Check that the BRD and a passed load run exist: `python tools/brd.py check` and the `runs/` folder. If the BRD has missing must-haves, the tool refuses; tell the user what is missing. An explicit `--run` must identify a passed load run; smoke, failed and aborted runs are refused.
 2. Ask the user which run to base the pack on if they care; by default the tool picks the passed load run with the most users (preferring one at or above the BRD peak).
 3. Run `python tools/clientpack.py projects/<client>/<app> [--run <run-id>]`.
 4. Tell the user in plain words: the verdict on the cover, which run it is based on, how many runs are included, and every `WARNING:` line (for example: BRD status is Draft; `prepared_by` is empty).
-5. Give the user the path of `index.html` and the `.zip`. Remind them to read the cover page and the "What this result does and does not show" section before sharing.
+5. Give the user the path of `index.html` and the `.zip`. The cover includes profile-by-flow coverage and exit-criteria status; remind them to read it and the "What this result does and does not show" section before sharing.
 6. Update `STATE.md` (stage "11. Client pack", pack path).
 
 ## Rules

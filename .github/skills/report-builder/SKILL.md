@@ -11,9 +11,12 @@ The report is built automatically by `tools/runk6.py` after every run. Use this 
 1. Ask which run if the user did not say. Default: the latest load run of the active environment.
 2. Run `python tools/report.py projects/<client>/<app> --run <run-id>` (omit `--run` for the latest load run).
 3. Read the report back and tell the user in plain words:
-   - the verdict banner (passed, not met, or not measured at peak load) and why,
+   - the verdict banner and strict overall RAG (Green / Amber / Red / Grey) and why,
    - each requirement result (Met, Not met, Not measured at peak load, Deferred),
-   - p95 and p99 per transaction,
+   - p50/p90/p95/p99 per transaction, TPS, error rate, CPU/memory and DB metrics when collected,
+   - same-profile run-over-run comparison, profile-by-flow coverage and exit-criteria status,
+   - any saturation observation (latency up, TPS flat/down, errors up),
+   - the structured findings block; observation/evidence are generated, while layer/hypothesis/finding remain blank unless human-approved in the BRD,
    - the limitations listed in section 5.
 4. Tell the user where the file is (`runs/<run-id>/report.html`), that it opens in any browser, and that they can print it to PDF from there. If `dashboard.html` is in the same run folder, mention it for detailed k6 charts.
 5. Update `STATE.md` (stage "10. Report", run id).
@@ -25,4 +28,5 @@ Fix the input (`brd.yaml`, `environments.yaml`, `k6/requirement-map.yaml`) and r
 - Do not add commentary, causes, recommendations or conclusions by hand. The report states facts only; analysis is a separate step the user asks for.
 - Do not re-run a test to get a better number.
 - Do not describe a run below the peak load as meeting a requirement. The tool marks those "Not measured at peak load"; keep that wording.
+- Do not write a cause or conclusion. Saturation is an observation only, and database metrics must say "not collected" when absent.
 - Do not include secrets, tokens or credentials in anything you write.

@@ -5,11 +5,29 @@ Sends at most one request per catalogue API, only GET, HEAD or QUERY calls marke
 Writes <project_dir>/target-check.json and updates `verified` of the environment in environments.yaml. Stops at the first 429 or 503.
 """
 import sys, os, re, json, time, datetime, argparse, urllib.request, urllib.error, yaml
+from urllib.parse import urlsplit, quote, urlencode
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import envconf
 
 READ = {"GET", "HEAD", "QUERY"}
 blank = lambda v: v is None or v == "" or v == [] or v == {}
+
+class SameOriginRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def __init__(self, base_url):
+        super().__init__()
+        self.expected_origin = self.origin(base_url)
+
+    @staticmethod
+    def origin(url):
+        parsed = urlsplit(url)
+        if parsed.username is not None or parsed.password is not None: return None
+        port = parsed.port if parsed.port is not None else (443 if parsed.scheme.lower() == "https" else 80)
+        return parsed.scheme.lower(), (parsed.hostname or "").lower(), port
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if self.origin(req.full_url) != self.expected_origin or self.origin(newurl) != self.expected_origin:
+            return None
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 def jp(obj, path):
     for part in path.split("."):
@@ -33,7 +51,8 @@ def call(base, method, path, body, timeout=20):
     req = urllib.request.Request(base + path, data=data, method=method, headers={"Content-Type": "application/json", "Accept": "application/json"})
     t = time.time()
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as r: status, text = r.status, r.read().decode("utf-8", "replace")
+        opener = urllib.request.build_opener(SameOriginRedirectHandler(base))
+        with opener.open(req, timeout=timeout) as r: status, text = r.status, r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e: status, text = e.code, e.read().decode("utf-8", "replace")
     except Exception as e: return None, None, round((time.time() - t) * 1000), str(e)[:120]
     try: parsed = json.loads(text)
@@ -92,20 +111,33 @@ def check_one(x, base, store):
     for ph in re.findall(r"\{(\w+)\}", path):
         val = None
         for dv in x.get("dynamic_values") or []:
+            if dv.get("name") != ph: continue
             src = store.get(dv.get("from_api"))
             if src is not None and dv.get("json_path"):
                 try: val = jp(src, dv["json_path"]); break
-                except Exception: pass
+                except (KeyError, IndexError, TypeError, AttributeError): pass
         if val is None: return {**r, "result": "skipped", "detail": f"no value for {{{ph}}}"}
-        path = path.replace("{" + ph + "}", str(val))
-    qp = "&".join(f"{q['name']}={q.get('example','')}" for q in x.get("query_params") or [] if q.get("required") and q.get("example") != "")
+        path = path.replace("{" + ph + "}", quote(str(val), safe=""))
+    query = []
+    for q in x.get("query_params") or []:
+        if q.get("required") is not True: continue
+        name, value = q.get("name"), q.get("example")
+        if not isinstance(name, str) or not name or not isinstance(value, (str, int, float, bool)) or value == "":
+            return {**r, "result": "skipped", "detail": f"no usable example for required query parameter {name or '<unnamed>'}"}
+        query.append((name, value))
+    qp = urlencode(query)
     body = (x.get("request_body") or {}).get("example")
     status, parsed, ms, err = call(base, m, path + ("?" + qp if qp else ""), body)
     if status is None: return {**r, "result": "differs", "ms": ms, "detail": f"no answer: {err}"}
     store[x["id"]] = parsed
     exp = (x.get("response") or {}).get("status")
     r.update(status=status, ms=ms)
-    if not (200 <= status < 300) or (isinstance(exp, int) and 200 <= exp < 300 and not 200 <= status < 300): return {**r, "result": "differs", "detail": f"status {status}, catalogue says {exp}"}
+    if isinstance(exp, int) and not isinstance(exp, bool):
+        if status != exp: return {**r, "result": "differs", "detail": f"status {status}, catalogue says {exp}"}
+    elif isinstance(exp, str) and exp.isdigit():
+        if status != int(exp): return {**r, "result": "differs", "detail": f"status {status}, catalogue says {exp}"}
+    elif not 200 <= status < 300:
+        return {**r, "result": "differs", "detail": f"status {status}, catalogue says {exp}"}
     want = set((x.get("response") or {}).get("fields") or []); have = keys_of(parsed)
     miss = sorted(want - have) if want else []
     return {**r, "result": "differs", "detail": "missing fields: " + ", ".join(miss)} if miss else {**r, "result": "ok"}

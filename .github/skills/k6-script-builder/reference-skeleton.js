@@ -8,11 +8,23 @@ import { Counter, Trend } from 'k6/metrics';
 // ---------- CONFIG (from brd.yaml / api-catalogue.yaml) ----------
 const BASE_URL = __ENV.BASE_URL;
 if (!BASE_URL) { throw new Error('Set BASE_URL, for example: k6 run -e BASE_URL=<scheme>://<host> script.js'); }
-const PROFILE = __ENV.PROFILE || 'smoke';                       // smoke = 1 user, 1 pass | load = ramping profile
+const PROFILE = __ENV.PROFILE || 'smoke';                       // smoke | baseline | load | stress | spike | endurance
 const MAX_VUS = Math.min(50, Number(__ENV.MAX_VUS || 50));      // hard cap from BRD abort conditions; env can only lower it
-const RAMP_UP = __ENV.RAMP_UP || '2m';
-const STEADY = __ENV.STEADY || '10m';
-const RAMP_DOWN = __ENV.RAMP_DOWN || '3m';
+const FLOW_IDS = (__ENV.FLOWS || '').split(',').filter(Boolean);
+const LOAD_STAGES = (__ENV.LOAD_STAGES || '').split(',').filter(Boolean).map((s) => {
+  const [target, duration] = s.split(':');
+  return { target: Number(target), duration };
+});
+const STRESS_STAGES = (__ENV.STRESS_STAGES || '').split(',').filter(Boolean).map((s) => {
+  const [target, duration] = s.split(':');
+  return { target: Number(target), duration };
+});
+const SPIKE_STAGES = (__ENV.SPIKE_STAGES || '').split(',').filter(Boolean).map((s) => {
+  const [target, duration] = s.split(':');
+  return { target: Number(target), duration };
+});
+const ENDURANCE_DURATION = __ENV.ENDURANCE_DURATION || '';
+const RAMP_DOWN = `${__ENV.RAMP_DOWN || 0}s`;
 const THINK_MIN = 1;                                            // seconds, from BRD think time
 const THINK_MAX = 3;
 const SEARCH_TERMS = ['term-a', 'term-b'];                      // only values observed in the catalogue / given by the user
@@ -22,10 +34,25 @@ const blocked = new Counter('blocked_responses');               // 429, 503 or C
 const txnDuration = new Trend('transaction_duration', true);    // wall time of a whole transaction
 
 // ---------- options ----------
-const scenarios = PROFILE === 'smoke'
-  ? { smoke: { executor: 'per-vu-iterations', vus: 1, iterations: 1, maxDuration: '2m', exec: 'smokeAll' } }
-  : { load: { executor: 'ramping-vus', startVUs: 0, gracefulRampDown: '30s', exec: 'mixed',
-              stages: [{ duration: RAMP_UP, target: MAX_VUS }, { duration: STEADY, target: MAX_VUS }, { duration: RAMP_DOWN, target: 0 }] } };
+const rampScenario = (stages, startVUs = 0) => ({
+  executor: 'ramping-vus', startVUs, gracefulRampDown: RAMP_DOWN, gracefulStop: '0s', exec: 'mixed', stages,
+});
+let scenarios;
+if (PROFILE === 'smoke') {
+  scenarios = { smoke: { executor: 'per-vu-iterations', vus: 1, iterations: 1, maxDuration: '2m', exec: 'smokeAll' } };
+} else if (PROFILE === 'baseline') {
+  scenarios = { baseline: { executor: 'per-vu-iterations', vus: MAX_VUS, iterations: 1, maxDuration: '2m', exec: 'smokeAll' } };
+} else if (PROFILE === 'load') {
+  scenarios = { load: rampScenario(LOAD_STAGES) };
+} else if (PROFILE === 'stress') {
+  scenarios = { stress: rampScenario(STRESS_STAGES, Number(__ENV.START_VUS || 0)) };
+} else if (PROFILE === 'spike') {
+  scenarios = { spike: rampScenario(SPIKE_STAGES, Number(__ENV.START_VUS || 0)) };
+} else if (PROFILE === 'endurance') {
+  scenarios = { endurance: { executor: 'constant-vus', vus: MAX_VUS, duration: ENDURANCE_DURATION, gracefulStop: RAMP_DOWN, exec: 'mixed' } };
+} else {
+  throw new Error(`Unsupported PROFILE: ${PROFILE}`);
+}
 
 export const options = {
   scenarios,
@@ -84,8 +111,10 @@ function t3(data) {                                             // id comes from
 
 // ---------- traffic mix (weights from BRD traffic share) ----------
 const MIX = [{ id: 'T1', weight: 44, run: t1 }, { id: 'T2', weight: 31, run: t2 }, { id: 'T3', weight: 25, run: t3 }];
-const TOTAL = MIX.reduce((s, t) => s + t.weight, 0);
-function pick() { let r = Math.random() * TOTAL; for (const t of MIX) { r -= t.weight; if (r < 0) return t; } return MIX[MIX.length - 1]; }
+const ACTIVE_MIX = FLOW_IDS.length ? MIX.filter((t) => FLOW_IDS.includes(t.id)) : MIX;
+const TOTAL = ACTIVE_MIX.reduce((s, t) => s + t.weight, 0);
+if (!ACTIVE_MIX.length) { throw new Error('FLOWS must select at least one BRD flow'); }
+function pick() { let r = Math.random() * TOTAL; for (const t of ACTIVE_MIX) { r -= t.weight; if (r < 0) return t; } return ACTIVE_MIX[ACTIVE_MIX.length - 1]; }
 
 // ---------- lifecycle ----------
 export function setup() {                                       // untimed: collect ids needed by later transactions
@@ -96,4 +125,4 @@ export function setup() {                                       // untimed: coll
   return { ids };
 }
 export function mixed(data) { pick().run(data); }
-export function smokeAll(data) { MIX.forEach((t) => t.run(data)); }
+export function smokeAll(data) { ACTIVE_MIX.forEach((t) => t.run(data)); }

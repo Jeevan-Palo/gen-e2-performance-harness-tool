@@ -11,15 +11,19 @@ Everything in `projects/<client>/<app>/sources/`. If it is empty, stop and ask t
 ## Procedure
 1. List every file in `sources/`. Read each one fully (PDF, Word, Markdown, text, CSV). If a file cannot be read, say so and ask for another format.
 2. Check for secrets (passwords, tokens, API keys, card numbers, real personal data). If found: do not copy them anywhere, tell the user which file, and continue without them.
-3. Environment facts (URL, owner, authorisation, limits, monitoring, test windows, test data) go into `environments.yaml` (one block per environment), never into `brd.yaml`. Ask the user for the environment URL; never guess it. Credentials are never stored: list only environment variable NAMES.
+3. Environment facts (URL, owner, authorisation, limits, monitoring, test windows, test data, including endurance's reserved window and available data volume) go into `environments.yaml` (one block per environment), never into `brd.yaml`. Ask the user for the environment URL; never guess it. Credentials are never stored: list only environment variable NAMES.
    Extract everything else into `brd.yaml` (structure is in `templates/brd.template.yaml`):
    - Copy only what the sources state. Keep the client's wording for vague statements (e.g. "should be responsive") and do not make it measurable yourself; add an open item instead.
    - Do not convert or derive figures (e.g. do not turn 1,200 orders/day into TPS).
-   - For each value, add an entry to `evidence`: `{field: "workload.peak_concurrent_users", source: "client_brd.pdf p.3"}`.
+   - For each value, add an entry to `evidence`: `{field: "workload.peak_concurrent_users", source: "client_brd.pdf p.3"}`. Profile evidence paths use their list index, e.g. `test_types[3].needed`, `test_types[3].parameters.spike_users`, `operational_safety.rollback_owner`, or `exit_criteria[3].start_when`; use `user answer, YYYY-MM-DD` for answers in chat.
    - If sources conflict, keep both in `open_items` as a question; do not pick one.
+   - Ask whether each listed test profile is needed. If yes, capture its parameters in that profile's `parameters` map; leave unknowns blank. In particular, do not infer spike size, endurance duration, step sizes, repeat counts, or acceptable variance.
+   - For Stress and Spike, capture the abort decision owner, rollback owner and procedure, and on-call contact. Ask if missing; do not infer operational approval.
+   - For each needed profile, capture its `start_when` entry criteria and `finish_when` exit criteria in `exit_criteria`.
+   - The BRD uses the fixed RAG policy rendered by `brd.py`: exact requirement targets decide Met/Not met; no default near-miss tolerance exists. Only record an amber warning condition if the client explicitly agrees to one, and add its source to `evidence`.
 4. Run `python tools/brd.py check projects/<client>/<app>/brd.yaml`. It prints the missing must-have parameters. Treat that list as the authority.
 5. Ask the user for the missing items:
-   - Group into at most 5 questions per message, most blocking first.
+   - Group into at most 5 questions per message, most blocking first. Ask profile scope first, then that profile's missing fields and criteria.
    - For each, say what is missing, why it matters for the test, and give an example format (e.g. "p95 or p99?").
    - Never suggest a default as if it were agreed. You may offer an example, labelled as an example.
 6. When the user answers: write the value, add `evidence` with source "user answer, <date>", re-run `check`. Repeat until it reports no missing must-haves, or the user says to proceed with open items.

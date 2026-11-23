@@ -45,6 +45,14 @@ def docker_ready(containers):
     rows, err = docker_sample(containers)
     return (len(rows) > 0 and err is None), (err or "")
 
+def check_visibility(source, containers):
+    if source == "none": return [], "No monitoring source is configured; monitoring is not visible"
+    if source != "docker_stats": return [], f"Monitoring collector '{source}' is not built; visibility cannot be confirmed"
+    if not containers: return [], "No monitoring containers are configured"
+    rows, err = docker_sample(containers)
+    if err or not rows: return rows, err or "no monitoring samples returned"
+    return rows, None
+
 def cpu_seconds(pid):
     """Cumulative CPU seconds of a process, or None."""
     try:
@@ -120,10 +128,9 @@ def main():
     if env is None: sys.exit("No environments.yaml or active environment")
     m = env.get("monitoring") or {}
     print(f"Environment '{name}': monitoring source = {m.get('source')}")
-    if m.get("source") != "docker_stats": print("Nothing to check for this source."); return
-    rows, err = docker_sample(m.get("containers") or [])
+    rows, err = check_visibility(m.get("source", "none"), m.get("containers") or [])
     for r in rows: print(f"  {r['series']:<28} CPU {r['cpu_pct']:>6.1f}%   memory {r['mem_mib']:>8.1f} MiB")
-    print("OK: Docker stats readable." if not err and rows else f"PROBLEM: {err or 'no rows returned'}")
+    print("OK: monitoring is visible." if not err and rows else f"PROBLEM: {err}")
     sys.exit(0 if (rows and not err) else 1)
 
 if __name__ == "__main__": main()

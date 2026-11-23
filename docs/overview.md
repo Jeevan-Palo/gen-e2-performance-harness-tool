@@ -4,7 +4,7 @@ A repeatable way to go from client documents to a tested k6 load script and a re
 
 ## How we start
 
-1. Install Python package `pyyaml` (`pip install pyyaml`) and k6 (`brew install k6`).
+1. Install the Python dependencies (`python -m pip install -r requirements.txt`) and k6 (`brew install k6`).
 2. Open the repo in VS Code with GitHub Copilot Chat in Agent mode.
 3. Type `/start-project` and give the client and application name.
 
@@ -16,10 +16,14 @@ A repeatable way to go from client documents to a tested k6 load script and a re
 | 2. Requirements intake | Put client files in `sources/`, then ask Copilot to run intake | Reads BRD, emails and notes. Extracts them without inventing values. Lists what is missing | `brd.yaml`, missing list | [.github/skills/requirements-intake/SKILL.md](../.github/skills/requirements-intake/SKILL.md), [tools/brd.py](../tools/brd.py) (`check`) |
 | 3. BRD and gap questions | Answer Copilot's questions (max 5 at a time) | Fills gaps from your answers. Every value is traced to a source | `brd.md` (client-readable), `open-items.md` | [.github/skills/brd-builder/SKILL.md](../.github/skills/brd-builder/SKILL.md), [tools/brd.py](../tools/brd.py) (`render`) |
 | 4-5. API catalogue | `/build-catalogue` | Imports Postman, OpenAPI or HAR files. If none exist, does read-only browser discovery. Never sends load | `api-catalogue.yaml` | [.github/prompts/build-catalogue.prompt.md](../.github/prompts/build-catalogue.prompt.md), [tools/catalogue.py](../tools/catalogue.py) |
-| 7. k6 script | `/build-script` | Writes the load script with thresholds and abort rules. Checks it against the BRD and catalogue. Does not run it | `k6/script.js`, `k6/requirement-map.yaml` | [.github/prompts/build-script.prompt.md](../.github/prompts/build-script.prompt.md), [tools/k6check.py](../tools/k6check.py) |
-| 8. Run | `/run-test` | Smoke run (1 user) first, then load. Guards: first load run max 5 users, each step at most double the last passed run, 20-minute cap | `runs/<run-id>/run.json`, `summary.json`, `k6-output.txt` | [.github/prompts/run-test.prompt.md](../.github/prompts/run-test.prompt.md), [tools/runk6.py](../tools/runk6.py) |
+| 6. Target check | `python tools/targetcheck.py <project>` | Binds results to the active base URL, blocks redirects outside its exact origin, URL-encodes required query parameters, and compares exact response status and fields; does not send writes or log in | `target-check.json` | [tools/targetcheck.py](../tools/targetcheck.py) |
+| 7. k6 script | `/build-script` | Builds the needed baseline, stepped-ramp, stress, spike and endurance scenarios from the BRD; each profile selects catalogue flows. Checks it against the BRD and catalogue; does not run it | `k6/script.js`, `k6/requirement-map.yaml` | [.github/prompts/build-script.prompt.md](../.github/prompts/build-script.prompt.md), [tools/k6check.py](../tools/k6check.py) |
+| 8. Run | `/run-test` | Smoke first. Baseline repetitions require visible monitoring and a consistency check; stepped ramp requires signed-off baseline and enforces a 2x step limit. Stress, spike and endurance have profile-specific guards | `runs/<run-id>/run.json`, `summary.json`, `k6-output.txt` | [.github/prompts/run-test.prompt.md](../.github/prompts/run-test.prompt.md), [tools/runk6.py](../tools/runk6.py), [tools/baseline.py](../tools/baseline.py) |
+| 9. Monitoring | Configured in `environments.yaml` | Collects Docker CPU and memory data during local runs; other collectors are not built | `runs/<run-id>/monitoring.json` | [tools/monitor.py](../tools/monitor.py) |
+| 10. Report | `/build-report` or automatic after a run | Reports p50/p90/p95/p99, TPS, errors, CPU/memory, DB metrics when collected, strict RAG, saturation observations, run comparisons, coverage and exit criteria. Findings are evidence-only unless human-approved text is in the BRD | `runs/<run-id>/report.html` | [tools/report.py](../tools/report.py) |
+| 11. Client pack | `/build-pack` | Builds a local pack and ZIP with coverage matrix and exit-criteria status; `--run` accepts only a passed load run | `client-pack/` | [tools/clientpack.py](../tools/clientpack.py) |
 
-Monitoring, the final report and the client pack (Step 9 onwards) are not built yet.
+The complete workflow can be started or resumed with `/run-end-to-end`. Check the project's next stage with `python tools/status.py <project>`. Azure, Dynatrace and client APM collectors remain deferred until a project identifies its provider and supplies access details.
 
 ## Repo layout
 
@@ -35,16 +39,6 @@ Monitoring, the final report and the client pack (Step 9 onwards) are not built 
 - Discovery is read-only. No load is sent until the test is approved.
 - Stated, assumed and open items are kept separate.
 
-## Current example: ToolShop
+## Project status
 
-Project: `projects/ToolShop/practicesoftwaretesting/`. It is a practice run on a demo shop, not a client engagement.
-
-- Steps 1–5 and 7 are complete. All three checks pass and no must-have parameters are missing.
-- Open items remain (9 in `brd.yaml`, see `open-items.md`). The main ones are API parity with the local copy, rate limits, and test accounts.
-- Load has not been run yet. A smoke run is recorded in `k6/smoke-summary.json`, but no `runs/` record exists for it. This needs to be checked before it is shown.
-
-Key files:
-
-- [brd.yaml](../projects/ToolShop/practicesoftwaretesting/brd.yaml): the single source of truth for requirements
-- [STATE.md](../projects/ToolShop/practicesoftwaretesting/STATE.md): current stage and blockers
-- [k6/script.js](../projects/ToolShop/practicesoftwaretesting/k6/script.js): the load script (not yet run)
+Project contents and run history change over time. Do not rely on a status snapshot in this overview; run `python tools/status.py projects/<client>/<app>` for the current stage and next action.

@@ -50,7 +50,10 @@ def list_runs(d, env_name):
 def choose(runs, peak, wanted):
     if wanted:
         for r, j in runs:
-            if r == wanted: return r, j
+            if r == wanted:
+                if j.get("profile") != "load" or j.get("outcome") != "passed":
+                    sys.exit(f"Run '{wanted}' is not a passed load run and cannot be used for a client pack.")
+                return r, j
         sys.exit(f"Run '{wanted}' not found for the active environment.")
     ok = [x for x in runs if x[1].get("profile") == "load" and x[1].get("outcome") == "passed"]
     if not ok: sys.exit("No passed load run exists for the active environment. Run a load test first.")
@@ -92,6 +95,8 @@ def main():
     # BRD
     brd_html = page("Business requirements document", "<p><a href='index.html'>&larr; Back to the summary</a></p>" + md_to_html(brdtool.render(brd)))
     open(os.path.join(root, "brd.html"), "w", encoding="utf-8").write(brd_html)
+    baseline_path = os.path.join(d, "baseline-check.json")
+    if os.path.isfile(baseline_path): shutil.copy(baseline_path, root)
     # cover
     run_, env = F["run"], F["env"]; mon = F["mon"]; M = F["M"]
     fval = lambda k, f="value": (M.get(k) or {}).get(f)
@@ -102,8 +107,24 @@ def main():
         ("Environment", f"{run_.get('env')} ({run_.get('env_type')})"), ("BRD", f"v{meta.get('version')} ({meta.get('status')})"),
         ("Prepared by", meta.get("prepared_by") or "not stated"), ("Pack created", now().strftime("%Y-%m-%d %H:%M UTC"))]) + "</div>")
     h.append(f"<div class='banner {F['vcls']}'><b>{esc(F['vtxt'])}</b><small>{esc(F['vsub'])}</small></div>")
-    dur = f"ramp-up {run_.get('ramp_up')}, steady {run_.get('steady')}, ramp-down {run_.get('ramp_down')}"
+    h.append(f"<div class='banner {F['rag_class']}'><b>Overall RAG: {esc(F['rag'])}</b><small>{esc(F['rag_note'])}</small></div>")
+    stages = run_.get("stages") or []
+    dur = ", ".join(f"{vu} users for {seconds}s" for vu, seconds in stages) or f"{run_.get('duration_seconds', 'n/a')} seconds"
     h.append(f"<h2>Summary</h2><p>The test ran {esc(run_.get('vus'))} concurrent users ({esc(dur)}) against the <b>{esc(run_.get('env'))}</b> environment. It sent {int(fval('http_reqs','count') or 0):,} requests; {(fval('http_req_failed') or 0)*100:.2f}% failed and {int(fval('blocked_responses','count') or 0)} were blocked or throttled. Every figure below is read directly from the load tool's output files.</p>")
+    coverage = F["coverage"]
+    states = {"covered": "Covered", "attempted": "Attempted, not passed", "pending": "Selected, not run", "not_selected": "Not selected"}
+    if coverage["flows"] and coverage["profiles"]:
+        h.append("<h2>Coverage matrix</h2><table><tr><th>Profile</th>" + "".join(f"<th>{esc(flow)}</th>" for flow in coverage["flows"]) + "</tr>")
+        for profile in coverage["matrix"]:
+            cells = {cell["flow"]: cell["status"] for cell in profile["cells"]}
+            h.append(f"<tr><td>{esc(profile['label'])}</td>" + "".join(
+                f"<td>{esc(states[cells.get(flow, 'not_selected')])}</td>" for flow in coverage["flows"]) + "</tr>")
+        h.append("</table>")
+    else:
+        h.append("<h2>Coverage matrix</h2><p>No selected profile/flow pairs are configured in the BRD and catalogue.</p>")
+    h.append("<h2>Exit-criteria status</h2><table><tr><th>Profile</th><th>Entry criteria</th><th>Exit criteria</th><th>Status</th></tr>" +
+             "".join(f"<tr><td>{esc(item.get('profile'))}</td><td>{esc(item.get('start_when'))}</td><td>{esc(item.get('finish_when'))}</td><td>{esc(status)}</td></tr>" for item, status in F["criteria"]) +
+             "</table><p class='muted'>Profile runs do not automatically satisfy human-authored criteria; human confirmation remains required.</p>")
     h.append("<h2>Requirement results</h2><table><tr><th>ID</th><th>Requirement</th><th>Priority</th><th>Result</th><th>Measured</th></tr>")
     cls = {"Met": "met", "Not met": "notmet", "Not measured at peak load": "nm", "Not measured": "nm", "Deferred": "def"}
     for x in res:
@@ -130,7 +151,7 @@ def main():
     if so: h.append("<h2>Not covered in this phase</h2><ul>" + "".join(f"<li>{esc(x)}</li>" for x in so) + "</ul>")
     oi = [o for o in (F["brd"].get("open_items") or []) if str(o.get("status", "")).lower() == "open" and o.get("question")]
     if oi: h.append("<h2>Open items</h2><ul>" + "".join(f"<li>{esc(o['question'])}</li>" for o in oi) + "</ul>")
-    h.append("<h2>Documents in this pack</h2><ul><li><a href='brd.html'>Business requirements document</a> (what was agreed to be tested)</li>" + f"<li><a href='runs/{esc(rid)}/report.html'>Full execution report of the selected run</a>" + ("" if not F['dash'] else f" and its <a href='runs/{esc(rid)}/dashboard.html'>detailed charts</a>") + "</li><li>The report of every other run and the raw evidence files are in the <code>runs/</code> folder.</li><li><code>manifest.json</code> lists every file with a fingerprint (SHA-256).</li></ul>")
+    h.append("<h2>Documents in this pack</h2><ul><li><a href='brd.html'>Business requirements document</a> (what was agreed to be tested)</li>" + f"<li><a href='runs/{esc(rid)}/report.html'>Full execution report of the selected run</a>" + ("" if not F['dash'] else f" and its <a href='runs/{esc(rid)}/dashboard.html'>detailed charts</a>") + "</li><li>The report of every other run and the raw evidence files are in the <code>runs/</code> folder.</li>" + ("<li><code>baseline-check.json</code> records baseline consistency and sign-off.</li>" if os.path.isfile(baseline_path) else "") + "<li><code>manifest.json</code> lists every file with a fingerprint (SHA-256).</li></ul>")
     ap_rows = F["brd"].get("approvals") or []
     h.append("<h2>Sign-off</h2><table><tr><th>Role</th><th>Name</th><th>Decision</th><th>Date</th></tr>" + "".join(f"<tr><td>{esc(x.get('role'))}</td><td>{esc(x.get('name')) or '&nbsp;'}</td><td>{esc(x.get('decision')) or '&nbsp;'}</td><td>{esc(x.get('date')) or '&nbsp;'}</td></tr>" for x in ap_rows) + "</table>")
     open(os.path.join(root, "index.html"), "w", encoding="utf-8").write(page(f"Performance test results - {meta.get('application')}", "".join(h)))
@@ -149,7 +170,10 @@ def main():
     files = sorted(os.path.relpath(os.path.join(dp, f), root) for dp, _, fs in os.walk(root) for f in fs)
     man = {"created_utc": now().strftime("%Y-%m-%dT%H:%M:%SZ"), "application": meta.get("application"), "client": meta.get("client"), "selected_run": rid,
            "brd_version": meta.get("version"), "brd_status": meta.get("status"), "environment": run_.get("env"), "tool": run_.get("k6_version"),
-           "runs_included": [r for r, _, _ in hist], "runs_excluded_no_results": excluded, "files": [{"path": f, "sha256": sha256(os.path.join(root, f))} for f in files if f != "manifest.json"]}
+           "runs_included": [r for r, _, _ in hist], "runs_excluded_no_results": excluded,
+           "coverage_matrix": F["coverage"]["matrix"],
+           "exit_criteria_status": [{"profile": item.get("profile"), "status": status} for item, status in F["criteria"]],
+           "files": [{"path": f, "sha256": sha256(os.path.join(root, f))} for f in files if f != "manifest.json"]}
     json.dump(man, open(os.path.join(root, "manifest.json"), "w"), indent=1)
     zp = root + ".zip"
     with zipfile.ZipFile(zp, "w", zipfile.ZIP_DEFLATED) as z:

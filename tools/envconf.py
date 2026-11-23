@@ -44,6 +44,9 @@ def problems(cfg):
             if not isinstance(e.get(k), int) or e.get(k) <= 0: P.append(f"{n}: {k} must be a positive whole number")
         mon = e.get("monitoring") or {}
         if mon.get("source") not in MON: P.append(f"{n}: monitoring.source must be one of {sorted(MON)}")
+        endurance = e.get("endurance")
+        if endurance is not None and not isinstance(endurance, dict):
+            P.append(f"{n}: endurance must be a mapping with test_window and data_volume fields")
         if mon.get("source") == "docker_stats":
             cs = mon.get("containers")
             if not isinstance(cs, list) or not cs or not all(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", str(c)) for c in cs): P.append(f"{n}: monitoring.containers must be a list of container names for docker_stats")

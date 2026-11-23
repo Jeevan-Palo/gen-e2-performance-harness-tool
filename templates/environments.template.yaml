@@ -13,6 +13,9 @@ environments:
     max_vus: 50                      # hard cap for this environment (runs are refused above it)
     max_run_minutes: 20
     test_windows: ""
+    endurance:
+      test_window: ""            # reserved window/date and duration for endurance testing
+      data_volume: ""            # available dataset size or record count; no credentials or personal data
     monitoring: {source: none, detail: ""}    # docker_stats | azure | dynatrace | client_apm | none
     # docker_stats example: {source: docker_stats, detail: "CPU and memory of the app containers", containers: [app-api-1, app-db-1], interval_seconds: 5}
     # azure, dynatrace, client_apm: collectors not built yet
@@ -32,6 +35,9 @@ environments:
     max_vus: 5
     max_run_minutes: 20
     test_windows: ""
+    endurance:
+      test_window: ""
+      data_volume: ""
     monitoring: {source: none, detail: ""}
     comparison_with_production: ""
     third_party_services: ""

@@ -21,17 +21,19 @@ description: Run the whole performance-testing flow for a project by looping on 
 | 4 Target check | `python tools/targetcheck.py <project>` (read calls only) | tool |
 | 5 Script | Generate the k6 script and pass `k6check.py` | `k6-script-builder` |
 | 6 Smoke | `tools/runk6.py <project> --profile smoke` | `k6-run` |
-| 7 Load | Step up through `tools/runk6.py`, one run at a time | `k6-run`, `monitoring-evidence` |
-| 8 Report | Built automatically after each run; if missing, `tools/report.py` | `report-builder` |
-| 9 Client pack | `tools/clientpack.py <project>` | `client-pack` |
+| 7 Baseline | Run the BRD-defined repetitions, check consistency, then stop for human sign-off | `k6-run`, `tools/baseline.py` |
+| 8 Profile runs | Run the selected BRD profiles; stepped ramp requires signed-off baseline and user-selected `--vus` | `k6-run`, `monitoring-evidence` |
+| 9 Report | Built automatically after each run; if missing, `tools/report.py` | `report-builder` |
+| 10 Client pack | `tools/clientpack.py <project>`; selected run must be a passed load run | `client-pack` |
 
 ## Always stop and ask the user
 - Stage 1: any missing or conflicting requirement value. Ask in groups of at most 5, never guess.
 - Stage 2: the environment URL, owner, limits and the `authorisation` value. Only the user sets authorisation; record their statement and the date in `authorisation_note`.
 - Stage 3: any write action during discovery needs the user's approval for that exact action. If the environment is blocked (`not_confirmed`), do not browse it.
 - Stage 4: if the target check shows differences, show them. Do not change the catalogue to fit without asking.
-- Stage 7: before every load run, tell the user the next allowed step and ask how many users and which durations. Use exactly what they choose. After each run, report the outcome, p95 and p99, CPU and memory, and ask whether to step up. Never repeat an aborted or failed run on your own.
-- Stage 9: after building the pack, tell the user to read the cover page before sharing it. Never share, send or upload it.
+- Stage 7: show the baseline check and stop for a human's explicit sign-off. Never approve the baseline on the user's behalf.
+- Stage 8: before a stepped-ramp run, show the next allowed BRD step and get the user's choice. Profile parameters come from the BRD; never substitute durations or users. After every run, report outcome, p50/p90/p95/p99, TPS, CPU/memory and ask before further runs. Never repeat an aborted or failed run on your own.
+- Stage 10: after building the pack, tell the user to read the cover page before sharing it. Never share, send or upload it.
 
 ## Never
 - Never change an `authorisation` value, use `--force-step`, or type a URL for a run.

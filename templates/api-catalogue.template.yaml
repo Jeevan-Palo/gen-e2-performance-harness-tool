@@ -32,4 +32,9 @@ apis:
       observed_at: ""
 flows:                      # business flow = ordered API ids per BRD transaction
   - {transaction: "", steps: []}
+web_tier:
+  requests: []               # Separate per-app inventory; not part of API flows or k6 execution yet.
+  # Requests use kind: session | csrf | static_asset and the same method/path/response/evidence fields as APIs.
+  # Session details may contain mechanism and cookie NAMES only. CSRF details may contain token/header NAMES only.
+  # Never store cookie values, CSRF token values, or signed query-string values.
 notes: []

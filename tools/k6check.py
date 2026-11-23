@@ -7,6 +7,7 @@ requirement-map.yaml: a list of {requirement: PR-01, k6_metric: "transaction_dur
 Runs `k6 inspect` too if k6 is installed. Requires PyYAML.
 """
 import sys, os, re, shutil, subprocess, yaml
+import brd as brdtool
 
 SECRETS = [re.compile(r"Bearer\s+[A-Za-z0-9\-_\.=]{20,}"), re.compile(r"eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}"),
            re.compile(r"(?i)(password|passwd|secret|api[_-]?key)['\"]?\s*[:=]\s*['\"][^'\"\s]{4,}['\"]")]
@@ -50,6 +51,31 @@ def main():
     if not re.search(r"MAX_VUS\s*=", code): P.append("No MAX_VUS cap defined")
     elif not re.search(r"Math\.min\(", code): W.append("MAX_VUS is not capped with Math.min(...); the environment could raise it")
     if "BASE_URL" in code and "PROFILE" not in code: P.append("No smoke/load PROFILE switch; a smoke run must be possible before a load run")
+    if "FLOW_IDS" not in code or "FLOW_IDS.includes" not in code:
+        P.append("Script must select the configured per-profile flow IDs from __ENV.FLOWS")
+
+    profile_names = {"baseline": "Baseline", "load": "Load", "stress": "Stress", "spike": "Spike", "endurance": "Endurance"}
+    for profile in (brd.get("test_types") or []):
+        if not isinstance(profile, dict) or str(profile.get("needed", "")).lower() not in ("yes", "true"):
+            continue
+        key = brdtool.profile_key(profile.get("type"))
+        if key in profile_names and f"PROFILE === '{key}'" not in code:
+            P.append(f"BRD profile {profile_names[key]} is needed but has no scenario in the script")
+        params = profile.get("parameters") or {}
+        flows = params.get("flows") or []
+        if key in profile_names and (not isinstance(flows, list) or not flows):
+            P.append(f"BRD profile {profile_names[key]} must select at least one flow")
+        elif isinstance(flows, list):
+            known_flows = {str(f.get("transaction")) for f in (cat.get("flows") or [])
+                           if isinstance(f, dict) and f.get("transaction")}
+            for flow in flows:
+                if str(flow) not in known_flows:
+                    P.append(f"BRD profile {profile_names.get(key, key)} selects unknown flow '{flow}'")
+    if any(brdtool.profile_key(p.get("type")) in ("stress", "spike")
+           and str(p.get("needed", "")).lower() in ("yes", "true")
+           for p in (brd.get("test_types") or []) if isinstance(p, dict)):
+        if "abortOnFail" not in code or "blocked_responses" not in code:
+            P.append("Stress and spike profiles must retain abort and blocked-response thresholds")
 
     active_tx = {t.get("id") for t in (brd.get("transactions") or []) if t.get("id")}
     ids = {a["id"] for a in cat.get("apis", []) if a.get("transaction") in active_tx}

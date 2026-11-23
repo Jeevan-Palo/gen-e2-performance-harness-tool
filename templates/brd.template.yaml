@@ -31,13 +31,57 @@ workload:
   basis: ""                   # measured | forecast | assumed
 requirements:         # each must be measurable
   - {id: "PR-01", transaction: "", metric: "", target: "", percentile: "", load_condition: "", priority: ""}
-test_types:           # needed: yes | no
-  - {type: "Baseline (single user)", needed: "", notes: ""}
-  - {type: "Load", needed: "", notes: ""}
-  - {type: "Stress", needed: "", notes: ""}
-  - {type: "Spike", needed: "", notes: ""}
-  - {type: "Endurance (soak)", needed: "", notes: ""}
-  - {type: "Scalability", needed: "", notes: ""}
+test_types:           # answer needed yes/no for every profile; complete parameters only when yes
+  - type: "Baseline (single user)"
+    needed: ""
+    notes: ""
+    parameters:
+      users: ""
+      repeat_runs: ""
+      max_variance_pct: ""
+      flows: []         # catalogue flow/transaction IDs included in this profile
+  - type: "Load (stepped ramp)"
+    needed: ""
+    notes: ""
+    parameters:
+      steps: []         # user counts for each held step
+      step_hold: ""
+      peak_hold: ""
+      ramp_down: ""
+      flows: []
+  - type: "Stress"
+    needed: ""
+    notes: ""
+    parameters:
+      start_users: ""
+      step_size: ""
+      step_hold: ""
+      stop_rule: ""
+      recovery_observation: ""
+      ramp_down: ""
+      flows: []
+  - type: "Spike"
+    needed: ""
+    notes: ""
+    parameters:
+      base_users: ""
+      spike_users: ""
+      spike_duration: ""
+      recovery_window: ""
+      autoscaling_config: ""   # describe the known configuration or explicitly state unknown
+      ramp_down: ""
+      flows: []
+  - type: "Endurance (soak)"
+    needed: ""
+    notes: ""
+    parameters:
+      users: ""
+      duration: ""
+      ramp_down: ""
+      flows: []
+  - type: "Scalability"
+    needed: ""
+    notes: ""                  # not supported by the first release; capture as an open item if needed
 environment:
   target: ""
   owner: ""
@@ -53,14 +97,33 @@ abort_conditions:     # must be agreed with operations
   - {condition: "Server health", threshold: "", action: ""}
   - {condition: "Impact on other systems or users", threshold: "", action: ""}
   - {condition: "Request from operations or environment owner", threshold: "", action: ""}
+operational_safety:
+  abort_owner: ""
+  rollback_owner: ""
+  rollback_procedure: ""
+  on_call_contact: ""
 monitoring_reporting:
   metrics: ""
   tools: ""
   interim_updates: ""
   final_report: ""
+rag_rules:            # fixed harness policy; metric thresholds are each requirement's target
+  green: "Every Must requirement is met at the agreed peak load."
+  amber: "All Must requirements are met, but a non-Must requirement is not met or an agreed warning condition applies."
+  red: "A Must requirement is not met or an abort threshold fires."
+  grey: "A Must requirement has no valid peak-load evidence."
+  amber_warning_conditions: [] # optional client-agreed conditions; record evidence for each
+  active_amber_warnings: []    # human-confirmed warnings currently applicable; must be a subset above
 risks:                # type: Assumption | Constraint | Dependency | Risk
   - {type: "", description: "", owner: "", impact: ""}
-exit_criteria: []
+exit_criteria:        # one entry for each required profile; start_when is entry criteria
+  - {profile: "Baseline (single user)", start_when: "", finish_when: ""}
+  - {profile: "Load (stepped ramp)", start_when: "", finish_when: ""}
+  - {profile: "Stress", start_when: "", finish_when: ""}
+  - {profile: "Spike", start_when: "", finish_when: ""}
+  - {profile: "Endurance (soak)", start_when: "", finish_when: ""}
+  - {profile: "Scalability", start_when: "", finish_when: ""}
+analysis_findings: [] # human-authored layer/hypothesis/finding text; report renders only signed-off entries
 open_items:           # {question, owner, due, status}
   - {question: "", owner: "", due: "", status: "Open"}
 approvals:            # filled by humans only

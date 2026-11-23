@@ -4,7 +4,7 @@
   python tools/catalogue.py import-openapi <api-catalogue.yaml> <spec.json|yaml> [base_url]
   python tools/catalogue.py import-postman <api-catalogue.yaml> <collection.json>
   python tools/catalogue.py import-har     <api-catalogue.yaml> <capture.har> <base_url>
-Imports MERGE into the catalogue (skip duplicates by method+path) and never keep secrets. Requires PyYAML.
+HAR imports API requests and first-party static assets into separate catalogue sections. Imports merge and never keep secrets. Requires PyYAML.
 """
 import sys, os, re, json, datetime, yaml
 from urllib.parse import urlparse, parse_qsl
@@ -13,20 +13,34 @@ METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS", "QUERY"}
 AUTH = {"none", "bearer", "cookie", "basic", "other"}
 SAFE = {"yes", "no", "conditional", "unknown"}
 SRC = {"postman", "openapi", "document", "browser", "har"}
+WEB_KINDS = {"session", "csrf", "static_asset"}
+STATIC_RESOURCE_TYPES = {"font", "image", "media", "script", "stylesheet"}
 CONF = {"high", "medium", "low"}
 SENSITIVE_KEYS = re.compile(r"pass(word)?|pwd|token|secret|card|cvv|cvc|iban|ssn|api[_-]?key|authorization|cookie", re.I)
 SECRET_PATTERNS = [(re.compile(r"Bearer\s+[A-Za-z0-9\-_\.=]{20,}"), "bearer token"),
                    (re.compile(r"eyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}"), "JWT"),
-                   (re.compile(r"(?i)(password|passwd|secret|api[_-]?key)\"?\s*[:=]\s*\"?(?!<redacted>|\$\{|\{\{|<)[^\s\",}]{4,}"), "password/secret/key value")]
+                   (re.compile(r"(?i)(password|passwd|secret|api[_-]?key)\"?\s*[:=]\s*\"?(?!<redacted>|\$\{|\{\{|<)[^\s\",}]{4,}"), "password/secret/key value"),
+                   (re.compile(r"(?i)(access[_-]?token|csrf[_-]?token|refresh[_-]?token|session[_-]?token|token|set-cookie|cookie)\"?\s*[:=]\s*\"?(?!<redacted>|\$\{|\{\{|<)[^\s\",}]{4,}"), "token/cookie value")]
 
 def blank(v): return v is None or v == "" or v == [] or v == {}
 
 def load(path):
-    if not os.path.exists(path): return {"meta": {}, "apis": [], "flows": [], "notes": []}
+    if not os.path.exists(path): return {"meta": {}, "apis": [], "flows": [], "notes": [], "web_tier": {"requests": []}}
     return yaml.safe_load(open(path, encoding="utf-8")) or {}
 
 def save(path, d):
     yaml.safe_dump(d, open(path, "w", encoding="utf-8"), sort_keys=False, allow_unicode=True, width=200)
+
+def web_requests(d):
+    web = d.get("web_tier")
+    if web is None: web = {}
+    if not isinstance(web, dict): raise ValueError("web_tier must be a mapping")
+    requests = web.get("requests")
+    if requests is None: requests = []
+    if not isinstance(requests, list): raise ValueError("web_tier.requests must be a list")
+    web["requests"] = requests
+    d["web_tier"] = web
+    return requests
 
 def norm_path(p):
     segs = []
@@ -44,6 +58,7 @@ def redact(o):
 def merge(path, new, source_type, base_url=None, excluded=None):
     d = load(path)
     d.setdefault("meta", {}); d.setdefault("apis", []); d.setdefault("flows", []); d.setdefault("notes", [])
+    web_requests(d)
     if base_url and blank(d["meta"].get("base_url")): d["meta"]["base_url"] = base_url
     d["meta"].setdefault("excluded_hosts", [])
     for h in excluded or []:
@@ -62,6 +77,31 @@ def merge(path, new, source_type, base_url=None, excluded=None):
     d["meta"].setdefault("created", datetime.date.today().isoformat())
     save(path, d)
     print(f"Added {added} API(s), skipped {len(new)-added} duplicate(s). Total {len(d['apis'])}. Wrote {path}")
+
+def merge_web(path, new):
+    if not new: return
+    d = load(path)
+    requests = web_requests(d)
+    have = {(r.get("kind"), r.get("method"), r.get("path")) for r in requests}
+    used_ids = {r.get("id") for r in requests}
+    n = max([int(m.group(1)) for i in used_ids if (m := re.fullmatch(r"WEB-(\d+)", str(i)))] or [0]) + 1
+    added = 0
+    for r in new:
+        key = (r["kind"], r["method"], r["path"])
+        if key in have: continue
+        while f"WEB-{n:03d}" in used_ids: n += 1
+        r = {"id": f"WEB-{n:03d}", **r}
+        r.setdefault("safe_to_load", "unknown")
+        r.setdefault("evidence", {})["source_type"] = "har"
+        r["evidence"].setdefault("confidence", "medium")
+        r["evidence"].setdefault("observed_at", datetime.date.today().isoformat())
+        requests.append(r)
+        used_ids.add(r["id"])
+        have.add(key)
+        n += 1
+        added += 1
+    save(path, d)
+    print(f"Added {added} web-tier request(s), skipped {len(new)-added} duplicate(s). Total {len(requests)}.")
 
 def resolve(spec, node, depth=0):
     if isinstance(node, dict) and "$ref" in node and depth < 4:
@@ -142,15 +182,24 @@ def import_har(cat, harfile, base):
     har = json.load(open(harfile, encoding="utf-8"))["log"]
     bh = urlparse(base).netloc
     pages = {p["id"]: p.get("title", "") for p in har.get("pages", [])}
-    out, excl = [], set()
+    out, web_out, excl = [], [], set()
     for e in har.get("entries", []):
         rq, rs = e["request"], e["response"]
         u = urlparse(rq["url"])
         mime = (rs.get("content") or {}).get("mimeType", "")
+        resource_type = str(e.get("_resourceType", "")).lower()
+        content_type = mime.split(";", 1)[0].strip().lower()
+        is_static = resource_type in STATIC_RESOURCE_TYPES or content_type == "text/css" or content_type in ("application/javascript", "text/javascript") or content_type.startswith(("image/", "font/", "audio/", "video/"))
+        is_api = "json" in mime or resource_type in ("xhr", "fetch")
         if u.netloc != bh:
-            if "json" in mime or e.get("_resourceType") in ("xhr", "fetch"): excl.add(u.netloc)
+            if is_api or is_static: excl.add(u.netloc)
             continue
-        if not ("json" in mime or e.get("_resourceType") in ("xhr", "fetch")): continue
+        if is_static:
+            response_headers = {h.get("name", "").lower(): h.get("value", "") for h in rs.get("headers", [])}
+            web_out.append({"kind": "static_asset", "name": f"{rq['method']} {norm_path(u.path)}", "method": rq["method"], "path": norm_path(u.path),
+                            "details": {}, "response": {"status": rs["status"], "content_type": mime, "cache_control": response_headers.get("cache-control", "")},
+                            "safe_to_load": "unknown", "evidence": {"source": os.path.basename(harfile), "confidence": "medium"}})
+        if not is_api: continue
         hd = {h["name"].lower(): h["value"] for h in rq.get("headers", [])}
         auth = "bearer" if hd.get("authorization", "").lower().startswith("bearer") else "cookie" if "cookie" in hd else "none"
         keep = {k: v for k, v in hd.items() if k in ("content-type", "accept")}
@@ -166,11 +215,12 @@ def import_har(cat, harfile, base):
             flds = sorted(j.keys()) if isinstance(j, dict) else []
         except Exception: pass
         out.append({"name": f"{rq['method']} {norm_path(u.path)}", "method": rq["method"], "path": norm_path(u.path), "auth": auth, "headers": keep,
-                    "query_params": [{"name": k, "example": v, "required": False} for k, v in parse_qsl(u.query)][:10], "request_body": body,
+                    "query_params": [{"name": "<redacted>" if SENSITIVE_KEYS.search(k) else k, "example": "<redacted>", "required": False} for k, _ in parse_qsl(u.query)][:10], "request_body": body,
                     "response": {"status": rs["status"], "content_type": mime, "fields": flds}, "dynamic_values": [], "depends_on": [],
                     "page": pages.get(e.get("pageref"), ""), "business_flow": "", "side_effects": "", "test_data": "",
                     "observed_latency_ms": round(e.get("time", 0)), "evidence": {"source": os.path.basename(harfile), "confidence": "medium"}})
     merge(cat, out, "har", f"{urlparse(base).scheme}://{bh}", excl)
+    merge_web(cat, web_out)
 
 def check(cat, brdfile):
     if not os.path.exists(cat):
@@ -202,6 +252,45 @@ def check(cat, brdfile):
         if a.get("safe_to_load") == "unknown": W.append(f"{i}: safe_to_load still unknown")
         if ev.get("confidence") == "low": W.append(f"{i}: low confidence")
         if a.get("method") in ("POST", "PUT", "PATCH", "DELETE") and blank(a.get("side_effects")): W.append(f"{i}: write call without side_effects described")
+    web = d.get("web_tier")
+    if web is None: web = {}
+    if not isinstance(web, dict):
+        P.append("web_tier must be a mapping")
+        web = {}
+    web_items = web.get("requests", [])
+    if web_items is None: web_items = []
+    if not isinstance(web_items, list):
+        P.append("web_tier.requests must be a list")
+        web_items = []
+    web_ids = {}
+    for r in web_items:
+        if not isinstance(r, dict):
+            P.append("web_tier.requests entries must be mappings")
+            continue
+        i = r.get("id", "?")
+        if not isinstance(i, str) or not re.fullmatch(r"WEB-\d{3,}", i):
+            P.append(f"{i}: web-tier id must look like WEB-001")
+        else:
+            web_ids[i] = web_ids.get(i, 0) + 1
+        if not isinstance(r.get("kind"), str) or r.get("kind") not in WEB_KINDS: P.append(f"{i}: web-tier kind must be one of {sorted(WEB_KINDS)}")
+        if not isinstance(r.get("method"), str) or r.get("method", "").upper() not in METHODS: P.append(f"{i}: invalid web-tier method")
+        if not str(r.get("path", "")).startswith("/"): P.append(f"{i}: web-tier path must start with /")
+        if not isinstance(r.get("safe_to_load"), str) or r.get("safe_to_load") not in SAFE: P.append(f"{i}: web-tier safe_to_load must be one of {sorted(SAFE)}")
+        details = r.get("details") or {}
+        if not isinstance(details, dict): P.append(f"{i}: web-tier details must be a mapping")
+        response = r.get("response") or {}
+        if not isinstance(response, dict):
+            P.append(f"{i}: web-tier response must be a mapping")
+            response = {}
+        if blank(response.get("status")): P.append(f"{i}: web-tier response.status missing")
+        ev = r.get("evidence") or {}
+        if not isinstance(ev, dict):
+            P.append(f"{i}: web-tier evidence must be a mapping")
+            ev = {}
+        if not isinstance(ev.get("source_type"), str) or ev.get("source_type") not in SRC: P.append(f"{i}: web-tier evidence.source_type must be one of {sorted(SRC)}")
+        if blank(ev.get("source")): P.append(f"{i}: web-tier evidence.source is empty")
+    for i, count in web_ids.items():
+        if count > 1: P.append(f"Duplicate web-tier id {i}")
     text = open(cat, encoding="utf-8").read()
     for rx, label in SECRET_PATTERNS:
         if rx.search(text): P.append(f"Possible secret in file ({label}). Remove it.")

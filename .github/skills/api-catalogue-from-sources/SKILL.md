@@ -13,12 +13,14 @@ Output: `projects/<client>/<app>/api-catalogue.yaml` (structure in `templates/ap
    - Postman collection: `python tools/catalogue.py import-postman <catalogue> <file>`
    - OpenAPI/Swagger: `python tools/catalogue.py import-openapi <catalogue> <file> [base_url]`
    - API list in a Word/PDF/Excel/text document: read it and add entries by hand, with `evidence.source_type: document`, the file and page as `source`, and `confidence: medium` or `low`.
+   - HAR imports first-party static assets into the separate `web_tier.requests` inventory. Session and CSRF behavior must be classified from observed evidence; the importer does not infer it.
 3. Fill what the import cannot know, using only the sources or the user's answers:
    - `meta.application` and `meta.base_url` if empty.
    - `transaction` and `step_order` for every API (map to BRD transaction ids). If the mapping is unclear, ask the user; do not guess.
    - `dynamic_values` (tokens, ids, CSRF values returned by one call and used by another) and `depends_on`.
    - `safe_to_load`, `side_effects`, `test_data`. Calls that create data, send email, take payment, or call third parties must not be `yes` without evidence. Mark them `conditional` or `no` and tell the user.
    - `flows`: the ordered API ids for each BRD transaction.
+   - `web_tier.requests`: observed per-app session, CSRF and static-asset metadata. This inventory is not part of API transaction flows or k6 execution yet. Store only cookie/header names and token locations, never secret values.
 4. Redact: never write tokens, passwords, cookies, API keys or real personal data. Use `<redacted>` or `${ENV_VAR}` names.
 5. Run `python tools/catalogue.py check <catalogue> <brd.yaml>`. Fix every issue you can from the sources; ask the user for the rest (max 5 questions per message, most blocking first). Repeat until it reports OK or the user says to proceed.
 6. Update `STATE.md` (stage "4. API catalogue", date, open issues). Do not write any performance script yet.

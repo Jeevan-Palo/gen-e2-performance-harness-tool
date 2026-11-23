@@ -19,10 +19,11 @@ Use only on an environment the user has confirmed we may use. Check `environment
 2. Preferred method, if a browser tool is available (for example Playwright MCP): open each page of the flow, watch network requests of type XHR/fetch, and note per request: method, URL, request body, response status, response fields, page, and what the user was doing.
 3. Fallback, always works: ask the user to record a HAR file (Chrome: open DevTools > Network, tick "Preserve log", perform the flow, then "Save all as HAR with content") and put it in `sources/`. Then import it:
    `python tools/catalogue.py import-har <catalogue> <file.har> <base_url>`
-   The script keeps only same-host API calls, lists third-party hosts under `meta.excluded_hosts`, and removes auth headers, cookies and sensitive body values.
+   The script imports same-host API calls and first-party static assets separately, lists observed third-party API/static hosts under `meta.excluded_hosts`, and removes auth headers, cookies and query-string values.
 4. For every discovered API fill `transaction`, `step_order`, `page`, `business_flow`, `dynamic_values`, `depends_on`, `safe_to_load` and `side_effects`, only from what you observed. Set `evidence.source_type` to `browser` or `har`.
-5. Run `python tools/catalogue.py check <catalogue> <brd.yaml>` and fix or ask, as in the `api-catalogue-from-sources` skill.
-6. Update `STATE.md` and give the user a short summary: pages visited, APIs found, transactions still without APIs, write calls not discovered.
+5. Record session and CSRF behavior in the separate `web_tier.requests` inventory only when observed. Store cookie/header names and token locations, never cookie or token values. HAR import does not infer these categories.
+6. Run `python tools/catalogue.py check <catalogue> <brd.yaml>` and fix or ask, as in the `api-catalogue-from-sources` skill.
+7. Update `STATE.md` and give the user a short summary: pages visited, APIs and web-tier resources found, transactions still without APIs, write calls not discovered.
 
 ## Do not
 - Do not generate a performance script. The catalogue is the input for the next step.

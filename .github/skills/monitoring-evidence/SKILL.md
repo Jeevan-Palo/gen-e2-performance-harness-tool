@@ -13,8 +13,8 @@ Monitoring is collected automatically by `tools/runk6.py` while a run is in prog
 - `none`: nothing is collected; the report says so.
 
 ## Before a run (docker_stats)
-1. Run `python tools/monitor.py check projects/<client>/<app>`. It prints one sample per configured container.
-2. If it reports a problem (Docker not running, container name wrong), tell the user and stop. Do not start the run unless the user says to continue without monitoring.
+1. Run `python tools/monitor.py check projects/<client>/<app>`. It prints one sample per configured container and succeeds only when monitoring data is visible.
+2. If it reports a problem (no source, collector not built, Docker not running, or container name wrong), tell the user and stop. A profile whose entry criteria require visible monitoring must not start.
 
 ## After a run
 Read the `MONITORING:` line of the runk6 output. Tell the user: samples collected, or why not. The report is built automatically.
