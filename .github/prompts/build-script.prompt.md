@@ -8,4 +8,4 @@ Build the k6 script for the project I name (ask me which one if unclear).
 2. Follow `.github/skills/k6-script-builder/SKILL.md`, starting from `reference-skeleton.js`.
 3. Run `python tools/k6check.py <project folder>` and fix issues until it says OK.
 4. Do not run k6 and do not send any requests. Show me the command to run the smoke test, and a short summary: transactions, mix, thresholds, abort rules.
-5. If something needed is missing or unclear (for example a test data source), ask me; never guess.
+5. If something needed is missing or unclear (for example a test data source), ask me with a copy-paste example answer; never guess.

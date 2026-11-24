@@ -369,6 +369,11 @@ class TestOrchestration(unittest.TestCase):
     def test_authorisation_is_always_a_human_gate(self):
         d = make_project(self.tmp, auth="not_confirmed"); rc, j = self.nxt(d)
         self.assertEqual((rc, j["gate"], j["actor"]), (2, "authorisation", "human")); self.assertIn("Only you", j["ask"])
+        self.assertTrue(j["example"])
+
+    def test_every_gate_has_a_copy_paste_example(self):
+        sys.path.insert(0, os.path.join(ROOT, "tools")); import next as nx
+        self.assertEqual(set(nx.GATES), set(nx.GATE_EXAMPLES))
 
     def test_run_plan_gate_then_proceed_then_failed_run_stops(self):
         d = self.ready(runs=[("20260101T000000Z-local-smoke-1vu", "smoke", 1, "passed", 50)])

@@ -54,5 +54,6 @@ Runs go through `tools/runk6.py`, reports through `tools/report.py`, the pack th
 - Before the first command in a session, run `python tools/doctor.py` (repo root). If it reports a missing prerequisite, tell the user what to install and stop; do not work around it. In these instructions `python` means the repo's `.venv` Python; if plain `python` is missing or cannot import `yaml`, use `.venv/bin/python` (Windows: `.venv\Scripts\python`).
 - Use the skills in `.github/skills/` for each step. Read the skill before starting.
 - Ask everything you need in as few messages as possible: business facts, advised values to accept and the run plan together. Every example must be a realistic value the user can copy.
+- EVERY question to the user, with no exception (choices, yes/no, gates, missing mappings, run counts, test data, monitoring), must include a ready copy-paste example answer the user can send back as the reply. For a gate use the `example reply` that `tools/next.py` prints. If a tool prints no example, write one yourself. Never ask a bare question.
 - After every change to `brd.yaml`, run `python tools/brd.py check <path>` and report the result.
 - Update `STATE.md` (stage, date, what is blocking) at the end of each step.

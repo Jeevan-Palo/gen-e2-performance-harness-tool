@@ -20,7 +20,7 @@ Monitoring is collected automatically by `tools/runk6.py` while a run is in prog
 Read the `MONITORING:` line of the runk6 output. Tell the user: samples collected, or why not. The report is built automatically.
 
 ## Adding Azure or Dynatrace later
-Ask the user for: the resource names or entity ids to watch, the metrics, and how access is granted. Credentials are never written to any file: only environment variable NAMES go in `environments.yaml`. A new collector must write the same `monitoring.json` structure so the report works unchanged.
+Ask the user for: the resource names or entity ids to watch, the metrics, and how access is granted, with a copy-paste example such as `container names: toolshop-api, toolshop-db; metrics: cpu, memory; access: docker socket`. Credentials are never written to any file: only environment variable NAMES go in `environments.yaml`. A new collector must write the same `monitoring.json` structure so the report works unchanged.
 
 ## Do not
 - Do not edit `monitoring.json` or any run file.

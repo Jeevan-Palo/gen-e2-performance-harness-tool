@@ -15,7 +15,7 @@ One source per run. If more is needed later (for example browser discovery for g
    - `.har`: HAR recording.
    - Word, PDF, Excel or text listing endpoints: API list document.
    - Nothing usable: ask the user.
-3. Ask the user to choose one (use the ask tool; mark the detected one as the default):
+3. Ask the user to choose one (use the ask tool; mark the detected one as the default, and give a copy-paste example reply such as `Postman collection`):
    - Postman collection
    - OpenAPI / Swagger
    - API list document

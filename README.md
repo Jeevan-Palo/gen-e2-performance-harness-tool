@@ -23,11 +23,24 @@ Client documents in, a tested k6 load run and a client pack out. Copilot (VS Cod
 Open Copilot Chat, switch to **Agent** mode, and type:
 - `/run-end-to-end` for a new or existing project. It runs `python tools/next.py <project>`, does the next action and stops only at human gates (missing business facts, environment and authorisation, write actions, a failed or aborted run, sharing the pack).
 - `/start-project` to create a new project and go straight through to the client pack.
-- Or one stage at a time: `/build-catalogue`, `/build-script`, `/run-test`, `/build-report`, `/build-pack`.
+- Or one stage at a time: `/build-brd` (stage 1, ends at the client Word file), `/set-environment` (2), `/build-catalogue` (3), `/check-target` (4), `/build-script` (5), `/run-test` (6-7), `/build-report` (8), `/build-pack` (9).
 - To see where a project stands, or resume after a break: `python tools/status.py projects/<client>/<app>` (all stages) or `python tools/next.py projects/<client>/<app>` (next action; exit code 2 means a human decides first).
 - Optional: in the Copilot Chat agent picker choose **perf-orchestrator**; it hands each stage to a specialist agent from `.github/agents/`. Needs a VS Code version with custom agents; the prompts above work without it.
 
 Put the client's files in `projects/<client>/<app>/sources/` before intake.
+
+### Slash command for each stage
+
+| Stage | Slash command |
+|---|---|
+| 1 BRD + client Word file | `/build-brd` |
+| 2 Environment | `/set-environment` |
+| 3 API catalogue | `/build-catalogue` |
+| 4 Target check | `/check-target` |
+| 5 k6 script | `/build-script` |
+| 6-7 Smoke and load runs | `/run-test` |
+| 8 Report | `/build-report` |
+| 9 Client pack | `/build-pack` |
 
 ## The nine stages (as printed by `tools/status.py`)
 | # | Stage | Tool that does the work | Output |

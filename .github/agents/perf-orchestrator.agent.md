@@ -26,7 +26,7 @@ You do not do the work yourself. You decide the next action, hand it over, and s
 
 1. Run `python tools/doctor.py` once per session (use `.venv/bin/python` if plain `python` cannot import `yaml`). Stop on a FAIL.
 2. Run `python tools/next.py projects/<client>/<app>` (ask which project if unclear). Read its output; it is the only source for which stage is next and whether a human must decide.
-3. `STOP`: ask the user exactly the gate's `ask`, in one message, and wait. Never clear a gate yourself, never set `authorisation`, never use `--force-step`.
+3. STOP: ask the user exactly the gate's `ask`, in one message, followed by the gate's `example` as a copy-paste reply, and wait. Never clear a gate yourself, never set `authorisation`, never use `--force-step`.
 4. `PROCEED`: hand the stage to the agent that fits it (stage 1 intake; stage 3 discovery; stage 5 scripter; stages 4 and 6-9 runner; stage 2 you do yourself with `envconf.py`, the user decides the values). Then run `next.py` again.
 5. `ALL STAGES DONE`: tell the user where the pack is and to read its cover page before sharing. Never share, send or upload it.
 

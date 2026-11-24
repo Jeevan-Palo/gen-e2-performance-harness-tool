@@ -13,7 +13,7 @@ Always run through `tools/runk6.py`. Never call `k6 run` directly. The wrapper c
 2. `python tools/envconf.py check`, `python tools/brd.py check`, `python tools/catalogue.py check` and `python tools/k6check.py` for the project must pass. Tell the user which environment is active (`python tools/envconf.py show <project>`) before running. If not, stop and tell the user.
 
 ## Procedure
-1. If the active environment has an approved `run_plan` (`approved_note` filled), use its `load_steps` and durations without asking again. Otherwise ask the user how many users and what durations they want if they did not say. Use exactly what they choose; do not raise it. Default shape for a small run: 30s ramp-up, 3m steady, 30s ramp-down.
+1. If the active environment has an approved `run_plan` (`approved_note` filled), use its `load_steps` and durations without asking again. Otherwise ask the user how many users and what durations they want if they did not say, with a copy-paste example such as `users 2, then 4, then 5; ramp 30s, steady 3m, ramp-down 30s`. Use exactly what they choose; do not raise it. Default shape for a small run: 30s ramp-up, 3m steady, 30s ramp-down.
 2. Smoke first (1 user, 1 pass): `python tools/runk6.py projects/<client>/<app> --profile smoke`
 3. If smoke outcome is `passed`, run the load test the user chose:
    `python tools/runk6.py projects/<client>/<app> --profile load --vus <N> --ramp-up 30s --steady 3m --ramp-down 30s`

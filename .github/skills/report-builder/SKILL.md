@@ -8,7 +8,7 @@ description: Generate the HTML performance execution report for a recorded run f
 The report is built automatically by `tools/runk6.py` after every run. Use this skill only to rebuild or explain a report (for an older run, or after fixing an input). The report is produced only by `tools/report.py`. It reads the run files, `brd.yaml`, `environments.yaml` and `k6/requirement-map.yaml`, and writes `runs/<run-id>/report.html`. Every figure comes from the k6 files; nothing is typed by hand.
 
 ## Procedure
-1. Ask which run if the user did not say. Default: the latest load run of the active environment.
+1. Ask which run if the user did not say, with a copy-paste example such as `latest load run`. Default: the latest load run of the active environment.
 2. Run `python tools/report.py projects/<client>/<app> --run <run-id>` (omit `--run` for the latest load run).
 3. Read the report back and tell the user in plain words:
    - the verdict banner (passed, not met, or not measured at peak load) and why,

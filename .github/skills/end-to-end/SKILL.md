@@ -8,9 +8,9 @@ description: Run the whole performance-testing flow for a project by looping on 
 `python tools/status.py projects/<client>/<app>` works out from the files which stages are done and what comes next. It is the source of truth; never mark a stage done by hand, and never skip one. `STATE.md` is only a short note (8 lines).
 
 ## Loop
-1. Run `python tools/next.py projects/<client>/<app>`. It builds on `status.py` and prints either `PROCEED` (do the stated action), `STOP` (a human decides first; see the gate id) or `ALL STAGES DONE`. Exit code 0 = done, 1 = proceed, 2 = stop. Use `--json` for the fields `stage`, `actor` (tool, copilot or human), `skill`, `command`, `gate`, `ask`.
+1. Run `python tools/next.py projects/<client>/<app>`. It builds on `status.py` and prints either `PROCEED` (do the stated action), `STOP` (a human decides first; see the gate id) or `ALL STAGES DONE`. Exit code 0 = done, 1 = proceed, 2 = stop. Use `--json` for the fields `stage`, `actor` (tool, copilot or human), `skill`, `command`, `gate`, `ask`, `example`.
 2. PROCEED: do that stage as in the table below, with the skill or tool it names. Then run `next.py` again and report in one or two sentences what changed.
-3. STOP: ask the user exactly the gate's `ask`, in one message, and wait. Never act on a gate yourself; only the user's answer clears it (the answer is recorded in the project files, then `next.py` moves on).
+3. STOP: ask the user exactly the gate's `ask`, in one message, followed by the gate's `example` (printed as `example reply`) as a ready copy-paste answer, and wait. Never act on a gate yourself; only the user's answer clears it (the answer is recorded in the project files, then `next.py` moves on).
 4. Repeat until `ALL STAGES DONE`. Resuming after a break is the same: just run `next.py`.
 
 ## Stages

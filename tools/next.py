@@ -21,6 +21,17 @@ GATES = {
     "failed_run": "The latest run was aborted, errored or failed to start. Decide: fix and rebuild the script, change the plan, or run it again yourself. I will not retry on my own.",
     "targets_missed": "The latest load run completed but missed targets and the plan does not allow packing missed targets. Decide: set pack_if_targets_missed, change the plan, or stop.",
 }
+# A reply the user can copy and paste for each gate (sample wording only; the user changes it to their own decision).
+GATE_EXAMPLES = {
+    "sources": "Files added to sources/",
+    "business_facts": "accept; load steps 2, 4, 5 users; ramp 30s, steady 3m, ramp-down 30s; pack if targets missed",
+    "environment": "URL https://staging.example.com, owner Jane Doe (QA lead)",
+    "authorisation": "Yes, I confirm testing the <environment name> environment is authorised",
+    "credentials": "Exported; I will run the check myself",
+    "run_plan": "load_steps 2, 4, 5; ramp_up 30s; steady 3m; ramp_down 30s; pack_if_targets_missed true",
+    "failed_run": "Fix the script and rebuild it; I will start the run myself",
+    "targets_missed": "Set pack_if_targets_missed to true",
+}
 STAGE_SKILL = {1: "requirements-intake, then brd-builder", 2: None, 3: "api-source-selector", 4: None, 5: "k6-script-builder", 6: "k6-run", 7: "k6-run, monitoring-evidence", 8: "report-builder", 9: "client-pack"}
 
 def status(d):
@@ -45,13 +56,13 @@ def load_yaml(p):
 def decide(d):
     d = d.rstrip("/"); s = status(d); nxt = s.get("next")
     out = {"project": d, "environment": s.get("environment"), "done": nxt is None, "stage": None, "actor": None, "skill": None,
-           "command": None, "gate": None, "needs_human": False, "ask": None, "reason": None}
+           "command": None, "gate": None, "needs_human": False, "ask": None, "example": None, "reason": None}
     if nxt is None:
         out.update(actor="copilot", reason="All stages are done. Tell the user where the pack is and to read its cover page before sharing; never share it.")
         return out
     n = nxt["n"]; out["stage"] = {"n": n, "name": nxt["name"]}; out["skill"] = STAGE_SKILL.get(n); out["command"] = nxt["next"]
     out["actor"] = "tool" if nxt["next"].startswith(("Terminal:", "python ")) else "copilot"
-    gate = lambda g, why: out.update(gate=g, needs_human=True, actor="human", ask=GATES[g], reason=why)
+    gate = lambda g, why: out.update(gate=g, needs_human=True, actor="human", ask=GATES[g], example=GATE_EXAMPLES[g], reason=why)
     name, env = envconf.get_env(d) if os.path.exists(envconf.path(d)) else (None, None)
     blocked = env is not None and env.get("authorisation") in (None, "", "not_confirmed")
     src = os.path.join(d, "sources")
@@ -90,7 +101,7 @@ def main():
     out = decide(sys.argv[1])
     if "--json" in sys.argv: print(json.dumps(out, indent=1))
     elif out["done"]: print("ALL STAGES DONE.\n" + out["reason"])
-    elif out["needs_human"]: print(f"STOP (stage {out['stage']['n']} {out['stage']['name']}): {out['gate']}\n  why: {out['reason']}\n  ask: {out['ask']}")
+    elif out["needs_human"]: print(f"STOP (stage {out['stage']['n']} {out['stage']['name']}): {out['gate']}\n  why: {out['reason']}\n  ask: {out['ask']}\n  example reply: {out['example']}")
     else: print(f"PROCEED (stage {out['stage']['n']} {out['stage']['name']}), actor {out['actor']}" + (f", skill {out['skill']}" if out["skill"] else "") + f"\n  do: {out['command']}" + (f"\n  note: {out['reason']}" if out["reason"] else ""))
     sys.exit(0 if out["done"] else 2 if out["needs_human"] else 1)
 

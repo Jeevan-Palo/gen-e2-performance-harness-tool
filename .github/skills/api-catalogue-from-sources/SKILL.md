@@ -20,7 +20,7 @@ Output: `projects/<client>/<app>/api-catalogue.yaml` (structure in `templates/ap
    - `safe_to_load`, `side_effects`, `test_data`. Calls that create data, send email, take payment, or call third parties must not be `yes` without evidence. Mark them `conditional` or `no` and tell the user.
    - `flows`: the ordered API ids for each BRD transaction.
 4. Redact: never write tokens, passwords, cookies, API keys or real personal data. Use `<redacted>` or `${ENV_VAR}` names.
-5. Run `python tools/catalogue.py check <catalogue> <brd.yaml>`. Fix every issue you can from the sources; ask the user for the rest (max 5 questions per message, most blocking first). Repeat until it reports OK or the user says to proceed.
+5. Run `python tools/catalogue.py check <catalogue> <brd.yaml>`. Fix every issue you can from the sources; ask the user for the rest (max 5 questions per message, most blocking first, each with a copy-paste example answer such as `login -> transaction T1, step 1, safe_to_load: false`). Repeat until it reports OK or the user says to proceed.
 6. Update `STATE.md` (stage "4. API catalogue", date, open issues). Do not write any performance script yet.
 
 ## Do not

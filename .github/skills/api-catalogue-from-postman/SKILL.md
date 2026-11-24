@@ -17,7 +17,7 @@ Output: `projects/<client>/<app>/api-catalogue.yaml` (structure in `templates/ap
    - Variables set by a test script (`pm.environment.set('token', ...)`) and used as `{{token}}` by another request become `dynamic_values` and `depends_on`. A variable nothing sets becomes a catalogue note: ask the user where it comes from.
    - From the environment file: variable names and a non-secret `base_url`. Values of secret-looking variables are never read.
    - Requests whose script expects only 4xx (negative tests) go in after the positive ones. One on a route already imported is not a separate API; it is listed under `notes`. One on a new route is imported with `negative_test: true` and must not go into a load flow.
-4. Then follow steps 3-6 of the `api-catalogue-from-sources` skill (map `transaction` and `step_order`, `flows`, `safe_to_load`, `side_effects`, `test_data`, then `python tools/catalogue.py check <catalogue> <brd.yaml>` and `STATE.md`). Ask the user for every mapping and `safe_to_load` value you cannot take from a source.
+4. Then follow steps 3-6 of the `api-catalogue-from-sources` skill (map `transaction` and `step_order`, `flows`, `safe_to_load`, `side_effects`, `test_data`, then `python tools/catalogue.py check <catalogue> <brd.yaml>` and `STATE.md`). Ask the user for every mapping and `safe_to_load` value you cannot take from a source, each with a copy-paste example such as `login -> transaction T1, step 1, safe_to_load: false`.
 
 ## Do not
 - Do not copy tokens, cookies, passwords or API keys from the collection or environment file into any file.

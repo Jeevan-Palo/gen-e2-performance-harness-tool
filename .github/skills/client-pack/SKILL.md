@@ -9,7 +9,7 @@ The pack is built only by `tools/clientpack.py`. It writes `projects/<client>/<a
 
 ## Procedure
 1. Check that the BRD and a passed load run exist: `python tools/brd.py check` and the `runs/` folder. If the BRD has missing must-haves, the tool refuses; tell the user what is missing.
-2. Ask the user which run to base the pack on if they care; by default the tool picks the passed load run with the most users (preferring one at or above the BRD peak).
+2. Ask the user which run to base the pack on if they care (with a copy-paste example such as `use the default run`); by default the tool picks the passed load run with the most users (preferring one at or above the BRD peak).
 3. Run `python tools/clientpack.py projects/<client>/<app> [--run <run-id>]`.
 4. Tell the user in plain words: the verdict on the cover, which run it is based on, how many runs are included, and every `WARNING:` line (for example: BRD status is Draft; `prepared_by` is empty).
 5. Give the user the path of `index.html` and the `.zip`. Remind them to read the cover page and the "What this result does and does not show" section before sharing.
