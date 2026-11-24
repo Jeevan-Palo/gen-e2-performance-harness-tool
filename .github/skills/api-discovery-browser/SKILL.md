@@ -8,11 +8,11 @@ description: Discover APIs by using the application in a browser when no API doc
 Use only on an environment the user has confirmed we may use. Check `environments.yaml` first: browse only the active environment, and only if its `authorisation` is not `not_confirmed`. Never change that value yourself.
 
 ## Safety rules (always)
-1. Read-only by default: browse, search, open pages and product views. Do NOT submit forms that create or change data (register, add to cart, checkout, post, delete) unless the user explicitly approves that exact action in this chat, or the action is listed in the active environment's approved `run_plan.discovery_actions` (then do it once, with synthetic data only).
+1. Read-only by default: browse, search, open pages and product views. Do NOT submit forms that create or change data (register, create, submit, pay, post, post, delete) unless the user explicitly approves that exact action in this chat, or the action is listed in the active environment's approved `run_plan.discovery_actions` (then do it once, with synthetic data only).
 2. Never use real credentials or real personal data. Use only test accounts the user gives you, and never write them into any file.
 3. If the active environment's authorisation is `not_confirmed`, do not browse it at all; tell the user. Otherwise keep discovery to the pages needed, with no scripted or repeated requests and no load of any kind.
 4. Stop and tell the user if you see rate limiting, a block page, a CAPTCHA, or any 429/503.
-5. Write calls you did not execute (e.g. checkout) are NOT discovered. Add them from documentation if available, or record them as an open item. Do not invent them.
+5. Write calls you did not execute (e.g. a payment or order submission) are NOT discovered. Add them from documentation if available, or record them as an open item. Do not invent them.
 
 ## Procedure
 1. Pick the BRD transactions to discover (T1, T2, ...) and the start URL from the user.

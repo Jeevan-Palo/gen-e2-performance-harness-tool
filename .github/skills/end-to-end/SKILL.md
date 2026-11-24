@@ -27,7 +27,7 @@ description: Run the whole performance-testing flow for a project by looping on 
 
 ## Run plan (ask once, at the start)
 Ask in the same message as the stage 1 questions, so the flow then runs without stopping. Write the answer into the active environment's `run_plan` in `environments.yaml`, with the user's own statement and date in `approved_note`. Ready-to-accept example:
-`load_steps: [2, 4, 5]`, `ramp_up: 30s`, `steady: 3m`, `ramp_down: 30s`, `discovery_actions: [login, add to cart, checkout]`, `pack_if_targets_missed: true`.
+`load_steps: [2, 4, 5]`, `ramp_up: 30s`, `steady: 3m`, `ramp_down: 30s`, `discovery_actions: [<write actions of this application's flows, e.g. login, submit order>]`, `pack_if_targets_missed: true`. Take the actions from this project's BRD transactions, never from another project.
 Steps must respect `max_vus` (first step at most 5, then at most 2x); `envconf.py check` enforces this.
 
 ## Stop and ask the user only for
