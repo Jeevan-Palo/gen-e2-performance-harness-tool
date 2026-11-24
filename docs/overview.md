@@ -27,9 +27,13 @@ A repeatable way to go from client documents to a tested k6 load run and a clien
 
 Start with `/check-setup` once, then `/run-end-to-end` (or `/start-project` for a new project).
 
-## Flow chart: stages and the files each one touches
+## Flow chart: start, Copilot files and data files per stage
 
-Grey = files read, green = files written, red = human gates (`tools/next.py` stops there), blue = the stage. Paths are inside `projects/<client>/<app>/` unless they start with `templates/` or `skills/` (repo level). `STATE.md` is updated at the end of every stage.
+Start with setup once (`/check-setup`), then `/start-project`. After that the loop in [end-to-end](../.github/skills/end-to-end/SKILL.md) runs `tools/next.py` after every stage, and `/run-end-to-end` resumes a project later.
+
+- Purple = Copilot files that drive the stage (instructions, prompt, skills, agent). `.github/copilot-instructions.md` is loaded on every request. Skill, prompt and agent names are folders or files under `.github/skills/`, `.github/prompts/` and `.github/agents/`.
+- Grey = data files read. Green = data files written. Red = human gates where `tools/next.py` stops. Blue = the stage and its tool.
+- Data paths are inside `projects/<client>/<app>/` unless they start with `templates/` or `.github/`. `STATE.md` is updated at the end of every stage.
 
 ```mermaid
 flowchart TD
@@ -37,17 +41,45 @@ flowchart TD
     classDef gate fill:#fee2e2,stroke:#b91c1c,color:#000
     classDef file fill:#f3f4f6,stroke:#6b7280,color:#000
     classDef out fill:#dcfce7,stroke:#15803d,color:#000
+    classDef cop fill:#ede9fe,stroke:#6d28d9,color:#000
 
-    START(["Run: python tools/next.py PROJECT"]) --> S1
+    subgraph SETUP["0 - Setup, once per machine"]
+        direction TB
+        SU1["setup.sh or setup.ps1<br/>creates .venv from requirements.txt"]:::stage
+        SU2["/check-setup<br/>.github/prompts/check-setup.prompt.md<br/>tool: tools/doctor.py"]:::stage
+        SUF[(".vscode/settings.json, .vscode/extensions.json")]:::file
+        SUF --> SU1
+        SU1 --> SU2
+    end
+
+    subgraph BEGIN["Start - new project"]
+        direction TB
+        RULES["ALWAYS LOADED<br/>.github/copilot-instructions.md - the 17 rules"]:::cop
+        SP["/start-project<br/>.github/prompts/start-project.prompt.md"]:::cop
+        TPL[("templates/brd.template.yaml, templates/environments.template.yaml")]:::file
+        NEWP[("projects/CLIENT/APP/ - sources/, brd.yaml, environments.yaml, STATE.md")]:::out
+        RULES --- SP
+        TPL --> SP
+        SP --> NEWP
+    end
+
+    SETUP --> BEGIN
+    BEGIN --> LOOP
+
+    LOOP{{"LOOP after every stage<br/>skill: .github/skills/end-to-end/SKILL.md<br/>tool: tools/next.py (built on tools/status.py)<br/>PROCEED = do the stage, STOP = ask the human<br/>Resume later: /run-end-to-end (.github/prompts/run-end-to-end.prompt.md)<br/>or agent .github/agents/perf-orchestrator.agent.md"}}:::gate
+
+    LOOP --> S1
 
     subgraph ST1["Stage 1 - BRD"]
         direction TB
+        C1["COPILOT FILES<br/>skills: requirements-intake, brd-builder<br/>agent: perf-intake"]:::cop
         F1a[("sources/ - client files")]:::file
         F1b[("templates/brd.template.yaml")]:::file
-        S1["requirements-intake, brd-builder<br/>tools: brd.py, brdexport.py"]:::stage
+        S1["tools: brd.py (check, questions, advise, render)<br/>brdexport.py"]:::stage
         G1{{"GATES: sources, business_facts"}}:::gate
         O1[("brd.yaml, brd.md, open-items.md, STATE.md")]:::out
         O1b[("client-pack/brd-confirmation-vN.docx")]:::out
+        C1 --- S1
         F1a --> S1
         F1b --> S1
         S1 --- G1
@@ -59,10 +91,12 @@ flowchart TD
 
     subgraph ST2["Stage 2 - Environment"]
         direction TB
+        C2["COPILOT FILES<br/>skill: end-to-end (the user decides the values)<br/>agent: perf-orchestrator"]:::cop
         F2a[("templates/environments.template.yaml")]:::file
-        S2["Fill URL, owner, limits, monitoring<br/>tool: envconf.py check, show, use"]:::stage
+        S2["tool: envconf.py (check, show, use)"]:::stage
         G2{{"GATES: environment, authorisation"}}:::gate
         O2[("environments.yaml")]:::out
+        C2 --- S2
         F2a --> S2
         S2 --- G2
         S2 --> O2
@@ -72,26 +106,47 @@ flowchart TD
 
     subgraph ST3["Stage 3 - API catalogue"]
         direction TB
-        F3a[("sources/ - Postman, OpenAPI, HAR or API list")]:::file
-        F3b[("brd.yaml - transaction ids")]:::file
-        F3c[("templates/api-catalogue.template.yaml")]:::file
-        S3["api-source-selector, then catalogue or discovery skill<br/>tool: catalogue.py import, check"]:::stage
+        C3["COPILOT FILES<br/>prompt: /build-catalogue<br/>skill: api-source-selector<br/>agent: perf-discovery"]:::cop
+        S3{"Which API source?<br/>asked via api-source-selector"}:::stage
+        F3a[("sources/ - Postman collection and environment file")]:::file
+        F3b[("sources/ - OpenAPI or Swagger file, API list document")]:::file
+        F3c[("sources/ - HAR recording")]:::file
+        K1["skill: api-catalogue-from-postman<br/>tool: catalogue.py import-postman"]:::stage
+        K2["skill: api-catalogue-from-sources<br/>tool: catalogue.py import-openapi, or by hand from a document"]:::stage
+        K3["skill: api-discovery-browser<br/>tool: catalogue.py import-har"]:::stage
+        BR["BROWSER DISCOVERY - no API files<br/>skill: api-discovery-browser<br/>agent: perf-discovery<br/>MCP: Playwright, .vscode/mcp.json (optional, needs Node.js)<br/>read-only, only if environment is authorised"]:::stage
+        G3{{"GATES: authorisation, write action outside run_plan.discovery_actions"}}:::gate
+        T3[("templates/api-catalogue.template.yaml, brd.yaml transaction ids")]:::file
+        CK["tool: catalogue.py check"]:::stage
         O3[("api-catalogue.yaml")]:::out
-        F3a --> S3
-        F3b --> S3
-        F3c --> S3
-        S3 --> O3
+        C3 --- S3
+        S3 -->|Postman| K1
+        S3 -->|OpenAPI, document| K2
+        S3 -->|HAR| K3
+        S3 -->|nothing usable| BR
+        F3a --> K1
+        F3b --> K2
+        F3c --> K3
+        BR --- G3
+        T3 --> CK
+        K1 --> CK
+        K2 --> CK
+        K3 --> CK
+        BR --> CK
+        CK --> O3
     end
 
     ST3 --> S4
 
-    subgraph ST4["Stage 4 - Target check (read-only)"]
+    subgraph ST4["Stage 4 - Target check, read-only"]
         direction TB
+        C4["COPILOT FILES<br/>skill: end-to-end<br/>agent: perf-runner (no edit tool)"]:::cop
         F4a[("api-catalogue.yaml")]:::file
         F4b[("environments.yaml - base_url, credentials_env_vars names")]:::file
         S4["tool: targetcheck.py<br/>one request per read API"]:::stage
         G4{{"GATES: authorisation, credentials"}}:::gate
         O4[("target-check.json; environments.yaml verified note")]:::out
+        C4 --- S4
         F4a --> S4
         F4b --> S4
         S4 --- G4
@@ -100,13 +155,15 @@ flowchart TD
 
     ST4 --> S5
 
-    subgraph ST5["Stage 5 - k6 script (never run here)"]
+    subgraph ST5["Stage 5 - k6 script, never run here"]
         direction TB
+        C5["COPILOT FILES<br/>prompt: /build-script<br/>skill: k6-script-builder<br/>agent: perf-scripter"]:::cop
         F5a[("brd.yaml")]:::file
         F5b[("api-catalogue.yaml")]:::file
-        F5c[("skills/k6-script-builder/reference-skeleton.js")]:::file
-        S5["k6-script-builder skill, perf-scripter agent<br/>tool: k6check.py"]:::stage
+        F5c[(".github/skills/k6-script-builder/reference-skeleton.js")]:::file
+        S5["tool: k6check.py"]:::stage
         O5[("k6/script.js, k6/requirement-map.yaml")]:::out
+        C5 --- S5
         F5a --> S5
         F5b --> S5
         F5c --> S5
@@ -115,13 +172,15 @@ flowchart TD
 
     ST5 --> S6
 
-    subgraph ST6["Stage 6 - Smoke run (1 user)"]
+    subgraph ST6["Stage 6 - Smoke run, 1 user"]
         direction TB
+        C6["COPILOT FILES<br/>prompt: /run-test<br/>skill: k6-run<br/>agent: perf-runner"]:::cop
         F6a[("k6/script.js")]:::file
         F6b[("environments.yaml - base_url, max_vus, authorisation")]:::file
         S6["tool: runk6.py --profile smoke"]:::stage
         G6{{"GATES: authorisation, failed_run"}}:::gate
         O6[("runs/RUN-ID/ - run.json, summary.json, k6-output.txt, report.html")]:::out
+        C6 --- S6
         F6a --> S6
         F6b --> S6
         S6 --- G6
@@ -132,11 +191,13 @@ flowchart TD
 
     subgraph ST7["Stage 7 - Load runs and monitoring"]
         direction TB
+        C7["COPILOT FILES<br/>prompt: /run-test<br/>skills: k6-run, monitoring-evidence<br/>agent: perf-runner"]:::cop
         F7a[("environments.yaml - run_plan, monitoring")]:::file
         F7b[("k6/script.js")]:::file
-        S7["tool: runk6.py --profile load, steps up to the peak<br/>monitor.py samples CPU and memory"]:::stage
+        S7["tools: runk6.py --profile load, monitor.py<br/>steps up to the peak, samples CPU and memory"]:::stage
         G7{{"GATES: run_plan, failed_run, targets_missed"}}:::gate
         O7[("runs/RUN-ID/ - run.json, summary.json, k6-output.txt, monitoring.json, dashboard.html")]:::out
+        C7 --- S7
         F7a --> S7
         F7b --> S7
         S7 --- G7
@@ -147,10 +208,12 @@ flowchart TD
 
     subgraph ST8["Stage 8 - Report"]
         direction TB
+        C8["COPILOT FILES<br/>prompt: /build-report<br/>skill: report-builder"]:::cop
         F8a[("runs/RUN-ID/ - run.json, summary.json, monitoring.json")]:::file
         F8b[("brd.yaml, k6/requirement-map.yaml, environments.yaml")]:::file
         S8["tool: report.py<br/>automatic after every run"]:::stage
         O8[("runs/RUN-ID/report.html")]:::out
+        C8 --- S8
         F8a --> S8
         F8b --> S8
         S8 --> O8
@@ -158,11 +221,13 @@ flowchart TD
 
     ST8 --> S9
 
-    subgraph ST9["Stage 9 - Client pack (never sent)"]
+    subgraph ST9["Stage 9 - Client pack, never sent"]
         direction TB
+        C9["COPILOT FILES<br/>prompt: /build-pack<br/>skill: client-pack<br/>agent: perf-runner"]:::cop
         F9a[("brd.yaml and every runs/RUN-ID/ folder")]:::file
         S9["tool: clientpack.py<br/>refuses on secret-like text"]:::stage
         O9[("client-pack/APP-RUN-ID/ - index.html, brd.html, runs/, manifest.json, plus .zip")]:::out
+        C9 --- S9
         F9a --> S9
         S9 --> O9
     end
