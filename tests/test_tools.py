@@ -74,7 +74,7 @@ class TestLint(unittest.TestCase):
     def test_start_project_continues_to_client_pack(self):
         prompt = open(os.path.join(ROOT, ".github", "prompts", "start-project.prompt.md"), encoding="utf-8").read()
         self.assertIn("continue end to end through the client pack", prompt)
-        self.assertIn("tools/status.py", prompt)
+        self.assertIn("tools/next.py", prompt)
         self.assertIn("brd.py advise", prompt); self.assertIn("run plan", prompt)
 
     def test_repo_is_clean(self):
