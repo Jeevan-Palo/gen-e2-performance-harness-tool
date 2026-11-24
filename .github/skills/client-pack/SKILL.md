@@ -1,9 +1,9 @@
 ---
 name: client-pack
-description: Build the client pack (cover summary, BRD as HTML, every run's report and the evidence files, manifest and zip) from a finished project. Use for Step 11 of the performance flow. Never sends anything.
+description: Build the client pack (cover summary, BRD as HTML, every run's report and the evidence files, manifest and zip) from a finished project. Use for stage 9 (client pack) of the performance flow. Never sends anything.
 ---
 
-# Client pack (Step 11)
+# Client pack (stage 9)
 
 The pack is built only by `tools/clientpack.py`. It writes `projects/<client>/<app>/client-pack/<app>-<run-id>/` (open `index.html`) and a `.zip` next to it. It sends nothing anywhere.
 

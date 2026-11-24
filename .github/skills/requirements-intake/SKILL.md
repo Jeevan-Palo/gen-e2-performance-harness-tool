@@ -1,9 +1,9 @@
 ---
 name: requirements-intake
-description: Read client requirement files (BRD, emails, notes, spreadsheets) and extract them into brd.yaml without inventing anything. Then ask the client only for business facts and offer advised values for technical parameters. Use for Steps 1 and 3 of the performance flow.
+description: Read client requirement files (BRD, emails, notes, spreadsheets) and extract them into brd.yaml without inventing anything. Then ask the client only for business facts and offer advised values for technical parameters. Use for stage 1 (BRD) of the performance flow, before brd-builder.
 ---
 
-# Requirements intake (Steps 1 and 3)
+# Requirements intake (stage 1)
 
 ## Inputs
 Everything in `projects/<client>/<app>/sources/`. If it is empty, stop and ask the user to add files.

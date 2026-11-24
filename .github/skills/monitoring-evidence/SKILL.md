@@ -1,9 +1,9 @@
 ---
 name: monitoring-evidence
-description: Collect server-side CPU and memory evidence during a run, from the monitoring source set in environments.yaml (docker_stats is built; Azure, Dynatrace and client APM are not built yet). Use for Step 9 of the performance flow.
+description: Collect server-side CPU and memory evidence during a run, from the monitoring source set in environments.yaml (docker_stats is built; Azure, Dynatrace and client APM are not built yet). Use during stage 7 (load runs) of the performance flow.
 ---
 
-# Monitoring evidence (Step 9)
+# Monitoring evidence (stage 7)
 
 Monitoring is collected automatically by `tools/runk6.py` while a run is in progress. The source comes from `environments.yaml` (`monitoring.source`) of the active environment. The data is saved as `runs/<run-id>/monitoring.json` and appears in section 4 of `report.html`.
 

@@ -4,9 +4,10 @@
   python tools/brd.py questions <brd.yaml>  list business questions for the client (with copy-paste examples)
   python tools/brd.py advise    <brd.yaml> [--apply] [--skip=key,...]  advised values for technical gaps; --apply writes them
   python tools/brd.py render    <brd.yaml>  write brd.md next to the yaml
+  python tools/brd.py provenance <brd.yaml> count values by basis: stated / advised / assumed / not evidenced / open
 Requires PyYAML (pip install pyyaml).
 """
-import sys, os, yaml
+import sys, os, re, yaml
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import envconf
 
@@ -171,7 +172,7 @@ def apply_advice(path, items, today):
                 tx = rows(raw.get("transactions"), ["name"])
                 rq = [{"id": f"PR-{i:02d}", "transaction": t.get("id"), "metric": "Response time", "target": "<= 3 s", "percentile": "p95", "load_condition": "peak load", "priority": "Must"} for i, t in enumerate(tx, 1)]
                 rq.append({"id": f"PR-{len(rq) + 1:02d}", "transaction": "All", "metric": "Error rate", "target": "<= 1%", "percentile": "n/a", "load_condition": "peak load", "priority": "Must"})
-                raw["requirements"] = rq
+                raw["requirements"] = rq; ev.append({"field": "requirements", "source": src})
             for r in rq:
                 for f, val in (("target", "<= 1%" if "error" in str(r.get("metric", "")).lower() else "<= 3 s"), ("percentile", "p95"), ("load_condition", "peak load")):
                     if blank(r.get(f)) and not (f == "percentile" and str(r.get("metric", "")).lower() in ("error rate", "throughput", "availability")):
@@ -200,6 +201,100 @@ def apply_advice(path, items, today):
         if e is not None:
             e.update(env_updates)
             with open(envconf.path(folder), "w", encoding="utf-8") as f: yaml.safe_dump(cfg, f, sort_keys=False, allow_unicode=True, width=200)
+
+# Basis of each value, worked out from `evidence`. Weakest basis comes last so a row built from several values shows the weakest.
+BASES = ("Stated", "Advised", "Assumed", "Not evidenced", "Open")
+ENV_FIELDS = ("target", "owner", "comparison_with_production", "third_party_services", "test_data", "monitoring_access", "test_windows", "authorisation")
+
+def _basis_of(source):
+    s = str(source).lower()
+    if "advised" in s: return "Advised"
+    if any(w in s for w in ("assum", "proposed", "sample")): return "Assumed"
+    return "Stated"
+
+def _evidence_rank(field, path):
+    """3 exact, 2 row range such as 'transactions.T1-T4 traffic_share', 1 ancestor such as 'transactions'; 0 no match."""
+    m = re.match(r"[\w.\-\[\]]+", str(field).strip())
+    if not m: return 0
+    head, rest = m.group(0), str(field).strip()[m.end():].strip()
+    if head == path: return 3
+    if path.startswith(head + "."): return 1
+    hp, pp = head.split("."), path.split(".")
+    for i in range(1, min(len(hp), len(pp))):
+        if hp[:i] != pp[:i]: break
+        r = re.fullmatch(r"([A-Za-z]+-?)(\d+)-(?:[A-Za-z]+-?)?(\d+)", hp[i]) if len(hp) == i + 1 else None
+        q = re.fullmatch(r"([A-Za-z]+-?)(\d+)", pp[i])
+        if r and q and q.group(1) == r.group(1) and int(r.group(2)) <= int(q.group(2)) <= int(r.group(3)) and (not rest or pp[-1] == rest):
+            return 2
+    return 0
+
+def _lookup(ev, path, env_name):
+    best = None
+    for e in ev:
+        r = _evidence_rank(e.get("field", ""), path)
+        if r and (best is None or r >= best[0]): best = (r, e)
+    field = path.split(".")[-1]
+    if path.startswith("environment.") and env_name and field in ENV_FIELDS and not (best and best[0] == 3):
+        return "Stated", f"environments.yaml ({env_name})"
+    if best: return _basis_of(best[1].get("source", "")), str(best[1].get("source", "")).strip()
+    return "Not evidenced", ""
+
+def provenance(d):
+    """One row per value a client must confirm: section, item, value, basis (Stated/Advised/Assumed/Not evidenced/Open/Optional), source."""
+    ev = [e for e in (d.get("evidence") or []) if isinstance(e, dict)]
+    env_name = (d.get("environment") or {}).get("_env_name")
+    out = []
+    def add(section, item, value, paths, required=True):
+        if blank(value):
+            out.append({"section": section, "item": item, "value": "", "basis": "Open" if required else "Optional", "source": ""}); return
+        found = [_lookup(ev, p, env_name) for p in paths]
+        basis, source = max(found, key=lambda x: BASES.index(x[0]))
+        out.append({"section": section, "item": item, "value": str(value), "basis": basis, "source": source})
+    m, w, e, mr = (d.get(k) or {} for k in ("meta", "workload", "environment", "monitoring_reporting"))
+    add("1. Purpose and background", "Purpose", d.get("purpose"), ["purpose"])
+    for i, o in enumerate(d.get("objectives") or [], 1): add("2. Objectives and scope", f"Objective {i}", o, ["objectives"])
+    for i, o in enumerate(d.get("scope_in") or [], 1): add("2. Objectives and scope", f"In scope {i}", o, ["scope_in"])
+    if blank(d.get("scope_in")): add("2. Objectives and scope", "In scope", "", [])
+    for i, o in enumerate(d.get("scope_out") or [], 1): add("2. Objectives and scope", f"Out of scope {i}", o, ["scope_out"])
+    for r in (d.get("stakeholders") or []):
+        if isinstance(r, dict): add("3. Stakeholders", r.get("role", ""), r.get("name"), ["stakeholders"], False)
+    for i, t in enumerate(rows(d.get("transactions"), ["name"]), 1):
+        tid = t.get("id") or f"T{i}"; base = f"transactions.{tid}"
+        add("4. Business transactions", f"{tid} {t.get('name')}", t.get("name"), [base + ".name"])
+        add("4. Business transactions", f"{tid} share of traffic", t.get("traffic_share"), [base + ".traffic_share"])
+        add("4. Business transactions", f"{tid} response-time start/end", t.get("measure_start_end"), [base + ".measure_start_end"])
+    if not rows(d.get("transactions"), ["name"]): add("4. Business transactions", "Transactions", "", [])
+    one_load = blank(w.get("peak_concurrent_users")) != blank(w.get("peak_tps"))
+    for lab, k, req in [("Peak concurrent users", "peak_concurrent_users", not one_load), ("Peak requests or transactions per second", "peak_tps", not one_load),
+                        ("Peak window and duration", "peak_window", True), ("Average daily volume", "avg_daily_volume", False),
+                        ("Expected growth over 12 months", "growth_12m", False), ("User think time and pacing", "think_time", True),
+                        ("Geographic distribution of users", "geography", False), ("Data volumes in the system", "data_volumes", False),
+                        ("Basis of figures", "basis", True)]:
+        add("5. Workload model", lab, w.get(k), ["workload." + k], req)
+    for i, r in enumerate(rows(d.get("requirements"), ["metric", "target"]), 1):
+        rid = r.get("id") or f"PR-{i:02d}"; base = f"requirements.{rid}"
+        txt = ", ".join(str(r[k]) for k in ("metric", "percentile", "target", "load_condition") if not blank(r.get(k)))
+        gap = blank(r.get("target")) or blank(r.get("load_condition"))
+        add("6. Performance requirements", f"{rid} ({r.get('transaction') or 'all'})", "" if gap else txt, [base + "." + k for k in ("target", "percentile", "load_condition")])
+    if not rows(d.get("requirements"), ["metric", "target"]): add("6. Performance requirements", "Requirements", "", [])
+    for t in (d.get("test_types") or []):
+        if isinstance(t, dict): add("7. Test types", t.get("type", ""), t.get("needed"), ["test_types"])
+    for lab, k, req in [("Target environment", "target", True), ("Environment owner", "owner", True), ("Authorisation to test", "authorisation", False),
+                        ("Comparison with production", "comparison_with_production", False), ("Third-party services", "third_party_services", False),
+                        ("Test data needs", "test_data", True), ("No real personal or payment data", "personal_data_confirmation", True),
+                        ("Monitoring access", "monitoring_access", True), ("Allowed test windows", "test_windows", True)]:
+        add("8. Test environment and data", lab, e.get(k), ["environment." + k], req)
+    for a in (d.get("abort_conditions") or []):
+        if isinstance(a, dict):
+            ok = not blank(a.get("threshold")) and not blank(a.get("action"))
+            add("9. Stop (abort) conditions", a.get("condition", ""), f"{a.get('threshold')}; {a.get('action')}" if ok else "", ["abort_conditions"])
+    for lab, k in [("Metrics collected", "metrics"), ("Tools", "tools"), ("Interim updates", "interim_updates"), ("Final report", "final_report")]:
+        add("10. Monitoring and reporting", lab, mr.get(k), ["monitoring_reporting." + k], False)
+    for i, c in enumerate(d.get("exit_criteria") or [], 1): add("12. Acceptance and exit criteria", f"Criterion {i}", c, ["exit_criteria"])
+    return out
+
+def provenance_counts(rows_):
+    return {b: sum(1 for r in rows_ if r["basis"] == b) for b in BASES}
 
 def _get(d, path):
     for p in path:
@@ -273,7 +368,7 @@ def render(d):
     return "\n".join(L) + "\n"
 
 def main():
-    if len(sys.argv) < 3 or sys.argv[1] not in ("check", "render", "questions", "advise"):
+    if len(sys.argv) < 3 or sys.argv[1] not in ("check", "render", "questions", "advise", "provenance"):
         sys.exit(__doc__)
     path = sys.argv[2]
     with open(path, encoding="utf-8") as f:
@@ -286,6 +381,11 @@ def main():
             for i, x in enumerate(miss, 1): print(f"  {i}. {x}")
             sys.exit(1)
         print("OK: all must-have parameters present.")
+    elif sys.argv[1] == "provenance":
+        pr = provenance(d); c = provenance_counts(pr)
+        print(f"{len(pr) - sum(1 for r in pr if r['basis'] == 'Optional')} values | " + " | ".join(f"{b} {c[b]}" for b in BASES))
+        for r in pr:
+            if r["basis"] in ("Not evidenced", "Open"): print(f"  {r['basis'].upper()}: {r['section']} / {r['item']}")
     elif sys.argv[1] == "advise":
         _, e = envconf.get_env(os.path.dirname(os.path.abspath(path)))
         items = advice(d, (e or {}).get("max_vus"))

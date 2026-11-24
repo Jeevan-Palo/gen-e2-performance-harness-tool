@@ -1,9 +1,9 @@
 ---
 name: k6-script-builder
-description: Generate a k6 performance script from brd.yaml and api-catalogue.yaml, with thresholds, abort rules and a requirement map for the report. Use for Step 7 of the performance flow. Does not run the script.
+description: Generate a k6 performance script from brd.yaml and api-catalogue.yaml, with thresholds, abort rules and a requirement map for the report. Use for stage 5 (script) of the performance flow. Does not run the script.
 ---
 
-# k6 script builder (Step 7)
+# k6 script builder (stage 5)
 
 Inputs: `projects/<client>/<app>/brd.yaml` and `api-catalogue.yaml`. Both checks must pass first:
 `python tools/brd.py check <brd.yaml>` and `python tools/catalogue.py check <catalogue>`. If not, stop and tell the user.

@@ -2,7 +2,8 @@
 
 You help a QA lead run client performance testing end to end.
 Flow: collect requirements -> BRD -> fill gaps -> API catalogue -> k6 script -> run -> monitor -> report -> client pack.
-Built so far: Steps 1-3 (requirements, BRD, missing-parameter questions), Steps 4-5 (API catalogue from supplied files or browser discovery), Step 7 (k6 script) and Step 8 (run, through tools/runk6.py only). Step 9 (monitoring: docker_stats is built, Azure and Dynatrace are not) and Step 10 (HTML report, through tools/report.py only). Step 11 (client pack, through tools/clientpack.py only). All steps are now built for the local Docker case.
+Stages (the numbers `tools/status.py` prints; use only these): 1 BRD, 2 Environment, 3 API catalogue, 4 Target check, 5 k6 script, 6 Smoke run, 7 Load runs (with monitoring), 8 Report, 9 Client pack. All are built for the local Docker case; monitoring through Azure, Dynatrace or client APM is not built.
+Runs go through `tools/runk6.py`, reports through `tools/report.py`, the pack through `tools/clientpack.py`.
 
 ## Rules (always)
 1. Never invent a value. Business facts (purpose, scope, journeys, peak users, environment, owner) come only from sources or the user; ask for them with the realistic copy-paste examples from `python tools/brd.py questions`.
@@ -42,10 +43,13 @@ Built so far: Steps 1-3 (requirements, BRD, missing-parameter questions), Steps 
 - `tools/monitor.py`: server-side CPU and memory sampling (`check` does a preflight sample). Used by runk6.
 - `tools/report.py`: builds `report.html` for a run. Always use it.
 - `tools/runk6.py`: runs k6 with the guards and records the run. Always use it.
+- `tools/doctor.py`: checks this machine (Python, PyYAML, k6, pandoc, docker, repo files). Run it first; `setup.sh` / `setup.ps1` create `.venv` from `requirements.txt`.
+- `tools/brdexport.py`: builds the Word file the client reviews and signs (`client-pack/brd-confirmation-v<version>.docx`) from `brd.yaml`: values with their basis, questions with an answer column, blank sign-off. Never edit the .docx, never fill its sign-off, never send it.
 - `tools/k6check.py`: checks the script against the BRD and catalogue. Always use it.
-- `tools/brd.py`: `check` lists missing must-have parameters; `questions` lists business facts to ask (with copy-paste examples); `advise` lists advised technical values and `--apply` writes them after the user accepts; `render` produces `brd.md`. Always use it. Do not decide what is missing or format the BRD yourself.
+- `tools/brd.py`: `check` lists missing must-have parameters; `questions` lists business facts to ask (with copy-paste examples); `advise` lists advised technical values and `--apply` writes them after the user accepts; `render` produces `brd.md`; `provenance` counts values as stated / advised / assumed / not evidenced / open. Always use it. Do not decide what is missing or format the BRD yourself.
 
 ## How to work
+- Before the first command in a session, run `python tools/doctor.py` (repo root). If it reports a missing prerequisite, tell the user what to install and stop; do not work around it. In these instructions `python` means the repo's `.venv` Python; if plain `python` is missing or cannot import `yaml`, use `.venv/bin/python` (Windows: `.venv\Scripts\python`).
 - Use the skills in `.github/skills/` for each step. Read the skill before starting.
 - Ask everything you need in as few messages as possible: business facts, advised values to accept and the run plan together. Every example must be a realistic value the user can copy.
 - After every change to `brd.yaml`, run `python tools/brd.py check <path>` and report the result.

@@ -1,9 +1,9 @@
 ---
 name: api-catalogue-from-sources
-description: Build the API catalogue (api-catalogue.yaml) from documents the client supplied, such as a Postman collection, an OpenAPI or Swagger file, or an API list in a document. Maps each API to the BRD transactions. Use for Step 4 of the performance flow.
+description: Build the API catalogue (api-catalogue.yaml) from documents the client supplied, such as a Postman collection, an OpenAPI or Swagger file, or an API list in a document. Maps each API to the BRD transactions. Use for stage 3 (catalogue) of the performance flow.
 ---
 
-# API catalogue from supplied sources (Step 4)
+# API catalogue from supplied sources (stage 3)
 
 Output: `projects/<client>/<app>/api-catalogue.yaml` (structure in `templates/api-catalogue.template.yaml`).
 

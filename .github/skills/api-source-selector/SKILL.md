@@ -1,9 +1,9 @@
 ---
 name: api-source-selector
-description: Ask which source the API catalogue should be built from (Postman collection, OpenAPI/Swagger, API list document, HAR recording or browser discovery) and hand over to the matching skill. Use first for Steps 4-5 of the performance flow.
+description: Ask which source the API catalogue should be built from (Postman collection, OpenAPI/Swagger, API list document, HAR recording or browser discovery) and hand over to the matching skill. Use first for stage 3 (catalogue) of the performance flow.
 ---
 
-# Choose the API source (Steps 4-5)
+# Choose the API source (stage 3)
 
 One source per run. If more is needed later (for example browser discovery for gaps), run this skill again.
 

@@ -1,9 +1,9 @@
 ---
 name: k6-run
-description: Run the project's k6 script safely (smoke first, then load at the user count the user chooses), record the run with exact UTC start and end times, and report the outcome. Use for Step 8 of the performance flow.
+description: Run the project's k6 script safely (smoke first, then load at the user count the user chooses), record the run with exact UTC start and end times, and report the outcome. Use for stages 6-7 (smoke and load runs) of the performance flow.
 ---
 
-# k6 run (Step 8)
+# k6 run (stages 6-7)
 
 Always run through `tools/runk6.py`. Never call `k6 run` directly. The wrapper checks the script, enforces the guards, records the run and saves the results in `projects/<client>/<app>/runs/<run-id>/`.
 

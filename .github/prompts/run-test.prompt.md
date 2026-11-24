@@ -1,6 +1,6 @@
 ---
 mode: agent
-description: Run the k6 test for a project (Step 8)
+description: Run the k6 test for a project (stages 6-7)
 ---
 Run the performance test for the project I name (ask me which one if unclear), following `.github/skills/k6-run/SKILL.md`.
 

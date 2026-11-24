@@ -1,0 +1,6 @@
+{
+  "chat.promptFiles": true,
+  "chat.useAgentSkills": true,
+  "python.terminal.activateEnvironment": true,
+  "files.exclude": { "**/.DS_Store": true, "**/__pycache__": true }
+}

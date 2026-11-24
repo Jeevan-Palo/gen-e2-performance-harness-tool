@@ -40,16 +40,19 @@ def lint():
         except SyntaxError as e: P.append(f"{rel(f)}: syntax error line {e.lineno}")
     known_tools = {os.path.basename(t) for t in tools}; known_skills = {os.path.basename(os.path.dirname(s)) for s in skills}
     known_prompts = {os.path.basename(p) for p in prompts}
-    docs = [os.path.join(ROOT, ".github", "copilot-instructions.md"), os.path.join(ROOT, "README.md")] + skills + prompts
+    docs = [os.path.join(ROOT, ".github", "copilot-instructions.md"), os.path.join(ROOT, "README.md"), os.path.join(ROOT, "docs", "overview.md")] + skills + prompts
     for f in docs:
         if not os.path.exists(f): P.append(f"missing file: {rel(f)}"); continue
         t = read(f)
+        if re.search(r"\bSteps? \d", t): P.append(f"{rel(f)}: old step numbering ('Step N'); use the stage numbers 1-9 that tools/status.py prints")
         for m in set(re.findall(r"tools/([A-Za-z0-9_]+\.py)", t)):
             if m not in known_tools: P.append(f"{rel(f)}: refers to tools/{m}, which does not exist")
         for m in set(re.findall(r"\.github/skills/([a-z0-9\-]+)/", t)):
             if m not in known_skills: P.append(f"{rel(f)}: refers to skill '{m}', which does not exist")
         for m in set(re.findall(r"\.github/prompts/([A-Za-z0-9\-]+\.prompt\.md)", t)):
             if m not in known_prompts: P.append(f"{rel(f)}: refers to prompt {m}, which does not exist")
+    for rf in ("requirements.txt", "setup.sh", "setup.ps1"):
+        if not os.path.exists(os.path.join(ROOT, rf)): P.append(f"missing file: {rf} (needed so other people can set up the repo)")
     ci = os.path.join(ROOT, ".github", "copilot-instructions.md")
     if os.path.exists(ci):
         nums = [int(x) for x in re.findall(r"(?m)^(\d+)\. ", read(ci))]

@@ -1,6 +1,6 @@
 ---
 mode: agent
-description: Generate the k6 script for a project (Step 7)
+description: Generate the k6 script for a project (stage 5)
 ---
 Build the k6 script for the project I name (ask me which one if unclear).
 

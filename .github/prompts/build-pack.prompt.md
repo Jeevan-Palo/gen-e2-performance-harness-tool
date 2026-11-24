@@ -1,6 +1,6 @@
 ---
 mode: agent
-description: Build the client pack for a finished project (Step 11)
+description: Build the client pack for a finished project (stage 9)
 ---
 Build the client pack for the project I name (ask me which one if unclear), following `.github/skills/client-pack/SKILL.md`.
 

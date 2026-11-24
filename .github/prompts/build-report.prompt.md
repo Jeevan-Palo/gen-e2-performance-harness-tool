@@ -1,6 +1,6 @@
 ---
 mode: agent
-description: Generate the HTML execution report for a run (Step 10)
+description: Generate the HTML execution report for a run (stage 8)
 ---
 Generate the performance execution report for the project and run I name (ask me which one if unclear), following `.github/skills/report-builder/SKILL.md`.
 

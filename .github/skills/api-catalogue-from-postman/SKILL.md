@@ -1,9 +1,9 @@
 ---
 name: api-catalogue-from-postman
-description: Build the API catalogue (api-catalogue.yaml) from a client-supplied Postman collection and optional Postman environment file, using the expected statuses, response fields and token correlation stated in the collection's test scripts. Use for Step 4 when the API source is a Postman collection.
+description: Build the API catalogue (api-catalogue.yaml) from a client-supplied Postman collection and optional Postman environment file, using the expected statuses, response fields and token correlation stated in the collection's test scripts. Use for stage 3 (catalogue) when the API source is a Postman collection.
 ---
 
-# API catalogue from a Postman collection (Step 4)
+# API catalogue from a Postman collection (stage 3)
 
 Output: `projects/<client>/<app>/api-catalogue.yaml` (structure in `templates/api-catalogue.template.yaml`). Reading files only: never send a request, never run the collection.
 

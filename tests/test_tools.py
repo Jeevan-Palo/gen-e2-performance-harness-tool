@@ -80,6 +80,23 @@ class TestLint(unittest.TestCase):
     def test_repo_is_clean(self):
         rc, out = tool("lint.py"); self.assertEqual(rc, 0, out)
 
+    def test_doctor_reports_prerequisites(self):
+        import doctor
+        res = doctor.checks(); names = {r[1] for r in res}
+        self.assertTrue({"Python 3.9+", "PyYAML", "k6", "pandoc"} <= names)
+        self.assertEqual([r for r in res if r[1] == "PyYAML"][0][0], "OK")  # this test run imports yaml
+        rc, out = tool("doctor.py"); self.assertEqual(rc, 0, out); self.assertIn("DOCTOR: OK", out)
+
+    def test_lint_flags_old_step_numbers_and_missing_requirements(self):
+        import lint
+        tmp = tempfile.mkdtemp(); old = lint.ROOT
+        try:
+            for sub in (".github", "tools", "templates"): shutil.copytree(os.path.join(ROOT, sub), os.path.join(tmp, sub))
+            write(os.path.join(tmp, "README.md"), "Step 7: k6 script\n")
+            lint.ROOT = tmp; problems = "\n".join(lint.lint())
+            self.assertIn("old step numbering", problems); self.assertIn("requirements.txt", problems)
+        finally: lint.ROOT = old; shutil.rmtree(tmp)
+
     def test_detects_problems(self):
         import lint
         tmp = tempfile.mkdtemp(); old = lint.ROOT
@@ -102,6 +119,28 @@ class TestBrdAndEnv(unittest.TestCase):
         d = make_project(self.tmp); rc, out = tool("brd.py", "check", os.path.join(d, "brd.yaml")); self.assertEqual(rc, 0, out)
         rc, out = tool("brd.py", "render", os.path.join(d, "brd.yaml")); md = open(os.path.join(d, "brd.md"), encoding="utf-8").read()
         self.assertIn("## 6. Performance requirements", md); self.assertIn("Authorisation to test", md)
+    def test_provenance_uses_most_specific_and_latest_evidence(self):
+        import brd as brdtool
+        d = {"purpose": "p", "workload": {"think_time": "5 s", "basis": "assumed", "peak_window": ""},
+             "transactions": [{"id": "T1", "name": "Login", "traffic_share": "50%"}, {"id": "T2", "name": "Search", "traffic_share": "50%"}],
+             "abort_conditions": [{"condition": "Error rate", "threshold": "> 5%", "action": "stop"}],
+             "evidence": [{"field": "purpose", "source": "user answer, 2026-11-23"},
+                          {"field": "workload.basis", "source": "user answer, 2026-11-23"}, {"field": "workload.basis", "source": "sample assumption supplied by Copilot"},
+                          {"field": "transactions", "source": "user answer, 2026-11-23"}, {"field": "transactions.T1-T2 traffic_share", "source": "advised by test lead"},
+                          {"field": "abort_conditions", "source": "advised by test lead"}]}
+        got = {r["item"]: r["basis"] for r in brdtool.provenance(d)}
+        self.assertEqual((got["Purpose"], got["Basis of figures"], got["Peak window and duration"]), ("Stated", "Assumed", "Open"))
+        self.assertEqual((got["T1 Login"], got["T2 share of traffic"], got["T1 response-time start/end"]), ("Stated", "Advised", "Open"))
+        self.assertEqual(got["Error rate"], "Advised"); self.assertEqual(got["User think time and pacing"], "Not evidenced")
+    @unittest.skipUnless(shutil.which("pandoc"), "pandoc not installed")
+    def test_brdexport_builds_word_file_with_answer_columns_and_blank_signoff(self):
+        import zipfile
+        d = make_project(self.tmp); rc, out = tool("brdexport.py", d); self.assertEqual(rc, 0, out)
+        docx = os.path.join(d, "client-pack", "brd-confirmation-v0.1.docx"); self.assertTrue(os.path.exists(docx))
+        xml = zipfile.ZipFile(docx).read("word/document.xml").decode("utf-8")
+        for text in ("Your response", "Part E. Sign-off", "Not evidenced", "Signature"): self.assertIn(text, xml)
+        write(os.path.join(d, "brd.yaml"), open(os.path.join(d, "brd.yaml"), encoding="utf-8").read() + "\nopen_items: [{question: 'Secret password: \"hunter2hunter2\"', status: Open}]\n")
+        rc, out = tool("brdexport.py", d); self.assertEqual(rc, 1); self.assertIn("Secret-like", out)
     def test_unconfirmed_authorisation_is_a_gap(self):
         d = make_project(self.tmp, auth="not_confirmed"); rc, out = tool("brd.py", "check", os.path.join(d, "brd.yaml")); self.assertEqual(rc, 1); self.assertIn("not_confirmed", out)
     def test_questions_only_report_current_gaps_and_deduplicate(self):
@@ -256,6 +295,10 @@ class TestReportAndPack(unittest.TestCase):
         rc, out = tool("clientpack.py", d); self.assertNotEqual(rc, 0); self.assertIn("Secret-like", out)
     def test_status_walks_the_stages(self):
         d = make_project(self.tmp, runs=[]); rc, out = tool("status.py", d, "--json"); j = json.loads(out)
+        if shutil.which("pandoc"):
+            self.assertFalse(j["stages"][0]["done"]); self.assertIn("brdexport.py", j["next"]["next"])
+            rc, out = tool("brdexport.py", d); self.assertEqual(rc, 0, out); rc, out = tool("status.py", d, "--json"); j = json.loads(out)
+            os.utime(os.path.join(d, "brd.yaml")); rc, out = tool("status.py", d, "--json"); self.assertFalse(json.loads(out)["stages"][0]["done"])
         self.assertEqual([s["done"] for s in j["stages"]][:3], [True, True, True]); self.assertEqual(j["next"]["n"], 4)
         e = os.path.join(self.tmp, "projects", "New", "app"); os.makedirs(e); rc, out = tool("status.py", e, "--json"); self.assertEqual(json.loads(out)["next"]["n"], 1)
     def test_run_plan_lets_a_completed_run_with_missed_targets_finish_the_flow(self):
@@ -275,7 +318,9 @@ class TestReportAndPack(unittest.TestCase):
         open(brd, "w", encoding="utf-8").write(text)
         rc, out = tool("status.py", d, "--json")
         j = json.loads(out)
-        self.assertTrue(j["stages"][0]["done"])
+        self.assertTrue(j["stages"][0]["done"] or shutil.which("pandoc"))
+        if shutil.which("pandoc"):
+            tool("brdexport.py", d); rc, out = tool("status.py", d, "--json"); self.assertTrue(json.loads(out)["stages"][0]["done"])
 
 
 class TestMonitor(unittest.TestCase):

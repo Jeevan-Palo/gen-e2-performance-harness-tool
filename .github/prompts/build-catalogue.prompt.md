@@ -1,6 +1,6 @@
 ---
 mode: agent
-description: Build the API catalogue for a project (Steps 4-5)
+description: Build the API catalogue for a project (stage 3)
 ---
 Build the API catalogue for the project I name (ask me which one if unclear).
 

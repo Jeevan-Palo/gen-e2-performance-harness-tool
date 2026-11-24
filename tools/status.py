@@ -3,9 +3,9 @@
 Usage: python tools/status.py <project_dir> [--json]
 Exit code 0 only when every stage is done. Requires PyYAML.
 """
-import sys, os, re, json, subprocess, yaml
+import sys, os, re, json, shutil, subprocess, yaml
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import envconf
+import envconf, brdexport
 T = os.path.dirname(os.path.abspath(__file__))
 
 def run(tool, *args):
@@ -23,7 +23,13 @@ def main():
     ok, out = run("brd.py", "check", brdp) if os.path.exists(brdp) else (False, "brd.yaml does not exist")
     open_items_proceed = str((brd.get("meta") or {}).get("open_items_decision", "")).strip().lower() == "proceed_with_open_items"
     brd_done = ok or open_items_proceed
-    add(1, "BRD complete", brd_done, "all must-have parameters present" if ok else ("must-have gaps recorded and user approved proceeding" if open_items_proceed else out.splitlines()[0] + (f" (first: {out.splitlines()[1].strip()})" if len(out.splitlines()) > 1 else "")),
+    docx = brdexport.docx_path(d, brd); envp = envconf.path(d)
+    doc_ok = os.path.exists(docx) and mtime(docx) >= max(mtime(brdp), mtime(envp))
+    need_doc = brd_done and not doc_ok and shutil.which("pandoc") is not None
+    detail = "all must-have parameters present" if ok else ("must-have gaps recorded and user approved proceeding" if open_items_proceed else out.splitlines()[0] + (f" (first: {out.splitlines()[1].strip()})" if len(out.splitlines()) > 1 else ""))
+    if brd_done: detail += f"; client Word file {'is current: ' + os.path.relpath(docx, d) if doc_ok else ('missing or older than the BRD' if need_doc else 'not built (pandoc is not installed)')}"
+    add(1, "BRD complete", brd_done and not need_doc, detail,
+        f"Terminal: python tools/brdexport.py {P}   (builds the Word file for the client; show its path and counts, then continue)" if need_doc else
         f"Copilot: /start-project (new project), then \"Sources are ready. Run requirements-intake, then brd-builder.\"" if not os.path.exists(brdp) else "Copilot: continue requirements-intake and answer its questions, then run brd-builder")
     name, env = envconf.get_env(d) if os.path.exists(envconf.path(d)) else (None, None)
     if env is None: add(2, "Environment defined", False, "environments.yaml missing or no active environment", "Copy templates/environments.template.yaml to environments.yaml and fill it in; only you set authorisation")

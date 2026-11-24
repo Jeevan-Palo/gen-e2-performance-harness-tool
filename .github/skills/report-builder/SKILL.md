@@ -1,9 +1,9 @@
 ---
 name: report-builder
-description: Generate the HTML performance execution report for a recorded run from the k6 results, the BRD and the environment. Use for Step 10 of the performance flow.
+description: Generate the HTML performance execution report for a recorded run from the k6 results, the BRD and the environment. Use for stage 8 (report) of the performance flow.
 ---
 
-# Report builder (Step 10)
+# Report builder (stage 8)
 
 The report is built automatically by `tools/runk6.py` after every run. Use this skill only to rebuild or explain a report (for an older run, or after fixing an input). The report is produced only by `tools/report.py`. It reads the run files, `brd.yaml`, `environments.yaml` and `k6/requirement-map.yaml`, and writes `runs/<run-id>/report.html`. Every figure comes from the k6 files; nothing is typed by hand.
 

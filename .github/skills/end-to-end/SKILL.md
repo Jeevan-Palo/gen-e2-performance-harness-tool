@@ -15,7 +15,7 @@ description: Run the whole performance-testing flow for a project by looping on 
 ## Stages
 | Stage | What to do | Skill or tool |
 |---|---|---|
-| 1 BRD | Read the sources, fill `brd.yaml`, ask for missing parameters, render the BRD | `requirements-intake`, `brd-builder` |
+| 1 BRD | Read the sources, fill `brd.yaml`, ask for missing parameters, render the BRD, then build the client Word file with `python tools/brdexport.py <project>` (status shows it missing or stale; rebuild after any BRD or environment change) | `requirements-intake`, `brd-builder` |
 | 2 Environment | Help the user fill `environments.yaml` (URL, owner, limits, monitoring); run `envconf.py check` | the user decides the values |
 | 3 Catalogue | Build `api-catalogue.yaml` from supplied files, else discover in the browser or from a HAR file | `api-source-selector`, then `api-catalogue-from-postman`, `api-catalogue-from-sources` or `api-discovery-browser` |
 | 4 Target check | `python tools/targetcheck.py <project>` (read calls only; if the catalogue needs a login, the user runs it in their own terminal with the `credentials_env_vars` exported, and it sends one login POST) | tool |
@@ -32,6 +32,7 @@ Steps must respect `max_vus` (first step at most 5, then at most 2x); `envconf.p
 
 ## Stop and ask the user only for
 - Stage 1: the business facts and the "accept advised values" reply (see `requirements-intake`), in one message. Never ask a field twice.
+- Stage 1 Word file: never a stop. Build it, tell the user its path and the Stated / Advised / Assumed / Not evidenced / Open counts, say it is for the client to review and sign, then carry on. Do not wait for a signed return, and never fill its sign-off or send it.
 - Stage 2: the environment URL and owner if not given, and the `authorisation` value. Only the user sets authorisation; record their statement and date in `authorisation_note`.
 - Stage 3: a write action during discovery that is not in `run_plan.discovery_actions`. If the environment is `not_confirmed`, do not browse it.
 - Stage 4: a target-check difference you cannot explain from the catalogue (for example a page that needs a login is not a difference: set its `auth` and re-run the check). Do not change the catalogue to hide a real difference.
