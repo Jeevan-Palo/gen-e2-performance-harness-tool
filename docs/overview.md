@@ -6,8 +6,9 @@ A repeatable way to go from client documents to a tested k6 load run and a clien
 
 - **Instructions** ([.github/copilot-instructions.md](../.github/copilot-instructions.md)): the rules Copilot always follows.
 - **Prompts** ([.github/prompts/](../.github/prompts)): the slash commands. They are thin; the detail lives in the skills.
-- **Skills** ([.github/skills/](../.github/skills)): one guide per stage. [end-to-end](../.github/skills/end-to-end/SKILL.md) loops on `tools/status.py` and calls the others.
-- **Tools** ([tools/](../tools)): deterministic Python. `status.py` is the source of truth for which stage is done and what is next; `doctor.py` checks the machine.
+- **Skills** ([.github/skills/](../.github/skills)): one guide per stage. [end-to-end](../.github/skills/end-to-end/SKILL.md) loops on `tools/next.py` and calls the others.
+- **Agents** ([.github/agents/](../.github/agents)): optional. `perf-orchestrator` hands each stage to `perf-intake`, `perf-discovery`, `perf-scripter` or `perf-runner`. The runner has no edit tool, so it cannot change run files, reports or the pack.
+- **Tools** ([tools/](../tools)): deterministic Python. `status.py` is the source of truth for which stage is done; `next.py` turns it into one next action and the human gates; `doctor.py` checks the machine.
 - **Projects** (`projects/<client>/<app>/`): one folder per client application with its sources, BRD, environments, catalogue, script, runs and pack.
 
 ## Stages

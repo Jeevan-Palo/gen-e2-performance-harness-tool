@@ -10,6 +10,6 @@ Start a new performance testing project and continue end to end through the clie
    - only the business facts still missing (`python tools/brd.py questions`), each with its copy-paste example;
    - the advised technical values (`python tools/brd.py advise`) as a table to accept or change;
    - the run plan to approve (load steps, durations, discovery write actions, build the pack if targets are missed), with a ready-to-accept example.
-4. Apply my answers, then follow `.github/skills/end-to-end/SKILL.md`: loop on `python tools/status.py projects/<client>/<app>` and do every unfinished stage in order without stopping, until `ALL STAGES DONE`.
+4. Apply my answers, then follow `.github/skills/end-to-end/SKILL.md`: loop on `python tools/next.py projects/<client>/<app>` and do every PROCEED stage in order without stopping, until `ALL STAGES DONE`.
 5. Stop only for the decisions listed in the end-to-end skill (authorisation, a failed smoke run, an aborted or errored run, a write action or load step outside the approved plan, an unexplained target-check difference). Never decide those for me.
 6. After the client pack is built, tell me where it is and to read the cover before sharing it.

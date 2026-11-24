@@ -21,7 +21,7 @@ Runs go through `tools/runk6.py`, reports through `tools/report.py`, the pack th
 12. The execution report is produced only by `tools/report.py` (see `.github/skills/report-builder/`). Never edit `report.html` or any run file, never add conclusions or root causes by hand, and never describe a run below the peak load as meeting a requirement.
 13. Server-side monitoring is collected only by `tools/runk6.py` through `tools/monitor.py` (see `.github/skills/monitoring-evidence/`). Never edit `monitoring.json`, never invent CPU or memory figures, and say plainly when a source (Azure, Dynatrace) is not built or a collection failed.
 14. The client pack is built only by `tools/clientpack.py` (see `.github/skills/client-pack/`). Never send, upload or email it, never edit it, never change the BRD status yourself, and never copy secret-like text anywhere if the tool refuses.
-15. To run the whole flow, follow `.github/skills/end-to-end/SKILL.md`: loop on `python tools/status.py <project>`, which is the source of truth for which stage is done and what is next. Never mark a stage done by hand, never skip one, and stop only at the human decisions the skill lists.
+15. To run the whole flow, follow `.github/skills/end-to-end/SKILL.md`: loop on `python tools/next.py <project>` (built on `tools/status.py`, the source of truth for which stage is done): it says PROCEED with one action or STOP at a human gate. Never clear a gate yourself. Never mark a stage done by hand, never skip one, and stop only at the human decisions the skill lists.
 16. `/start-project` starts project setup and then continues the end-to-end loop until the client pack is built or a required human decision is reached. It asks business facts, advised values and the run plan in one message, then runs without stopping except for the decisions in the end-to-end skill.
 17. After changing any file in `tools/`, `.github/` or `templates/`, run `python tools/lint.py` and `python -m unittest discover -s tests`, fix what they report, and show the user the result. Never weaken a test or a check to make it pass; tell the user instead.
 18. Do not create extra documents (no status/decision/handoff logs; `docs/overview.md` is allowed). The only state files are `brd.yaml`, `environments.yaml`, `open-items.md`, `api-catalogue.yaml` and `STATE.md` inside the project folder. Keep `STATE.md` to about 8 lines.
@@ -38,6 +38,7 @@ Runs go through `tools/runk6.py`, reports through `tools/report.py`, the pack th
 - `projects/<client>/<app>/runs/<run-id>/`: `run.json` (UTC window, outcome), `summary.json`, `k6-output.txt`, `monitoring.json` (CPU and memory samples), `dashboard.html` (k6 charts, load runs) and `report.html` (the execution report).
 - `projects/<client>/<app>/client-pack/`: the pack (`index.html` cover, `brd.html`, `runs/`, `manifest.json`) and its zip.
 - `tools/lint.py`: checks the repo's own files (skill and prompt frontmatter, references, rule numbers). `tests/test_tools.py`: tests of the tools; run with `python -m unittest discover -s tests`.
+- `tools/next.py`: the one next action and whether a human must decide first (gates). Exit 0 done, 1 proceed, 2 stop. Read-only.
 - `tools/status.py`: shows which stages of a project are done and what is next. `tools/targetcheck.py`: checks that the target answers the catalogue's read calls (read-only, one request per API).
 - `tools/clientpack.py`: builds the client pack. Always use it.
 - `tools/monitor.py`: server-side CPU and memory sampling (`check` does a preflight sample). Used by runk6.
@@ -49,6 +50,7 @@ Runs go through `tools/runk6.py`, reports through `tools/report.py`, the pack th
 - `tools/brd.py`: `check` lists missing must-have parameters; `questions` lists business facts to ask (with copy-paste examples); `advise` lists advised technical values and `--apply` writes them after the user accepts; `render` produces `brd.md`; `provenance` counts values as stated / advised / assumed / not evidenced / open. Always use it. Do not decide what is missing or format the BRD yourself.
 
 ## How to work
+- `.github/agents/` holds optional specialist agents (`perf-orchestrator` hands stages to `perf-intake`, `perf-discovery`, `perf-scripter`, `perf-runner`). The runner has no edit tool on purpose. Skills and prompts work without them.
 - Before the first command in a session, run `python tools/doctor.py` (repo root). If it reports a missing prerequisite, tell the user what to install and stop; do not work around it. In these instructions `python` means the repo's `.venv` Python; if plain `python` is missing or cannot import `yaml`, use `.venv/bin/python` (Windows: `.venv\Scripts\python`).
 - Use the skills in `.github/skills/` for each step. Read the skill before starting.
 - Ask everything you need in as few messages as possible: business facts, advised values to accept and the run plan together. Every example must be a realistic value the user can copy.

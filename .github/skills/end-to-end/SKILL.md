@@ -1,6 +1,6 @@
 ---
 name: end-to-end
-description: Run the whole performance-testing flow for a project by looping on tools/status.py. Do the next unfinished stage with the right skill or tool, stop only at the human decisions listed below, and resume from the files after any interruption. Use when the user says to start or continue a project end to end.
+description: Run the whole performance-testing flow for a project by looping on tools/next.py (which builds on tools/status.py). Do the next unfinished stage with the right skill or tool, stop only at the human decisions listed below, and resume from the files after any interruption. Use when the user says to start or continue a project end to end.
 ---
 
 # End to end
@@ -8,9 +8,10 @@ description: Run the whole performance-testing flow for a project by looping on 
 `python tools/status.py projects/<client>/<app>` works out from the files which stages are done and what comes next. It is the source of truth; never mark a stage done by hand, and never skip one. `STATE.md` is only a short note (8 lines).
 
 ## Loop
-1. Run `python tools/status.py projects/<client>/<app>`. Read the NEXT line.
-2. Do that stage as in the table. After it, run status again and report in one or two sentences what changed.
-3. Repeat until it prints `ALL STAGES DONE`, or until you reach a human decision (below). Resuming after a break is the same: just run status.
+1. Run `python tools/next.py projects/<client>/<app>`. It builds on `status.py` and prints either `PROCEED` (do the stated action), `STOP` (a human decides first; see the gate id) or `ALL STAGES DONE`. Exit code 0 = done, 1 = proceed, 2 = stop. Use `--json` for the fields `stage`, `actor` (tool, copilot or human), `skill`, `command`, `gate`, `ask`.
+2. PROCEED: do that stage as in the table below, with the skill or tool it names. Then run `next.py` again and report in one or two sentences what changed.
+3. STOP: ask the user exactly the gate's `ask`, in one message, and wait. Never act on a gate yourself; only the user's answer clears it (the answer is recorded in the project files, then `next.py` moves on).
+4. Repeat until `ALL STAGES DONE`. Resuming after a break is the same: just run `next.py`.
 
 ## Stages
 | Stage | What to do | Skill or tool |
@@ -29,6 +30,18 @@ description: Run the whole performance-testing flow for a project by looping on 
 Ask in the same message as the stage 1 questions, so the flow then runs without stopping. Write the answer into the active environment's `run_plan` in `environments.yaml`, with the user's own statement and date in `approved_note`. Ready-to-accept example:
 `load_steps: [2, 4, 5]`, `ramp_up: 30s`, `steady: 3m`, `ramp_down: 30s`, `discovery_actions: [<write actions of this application's flows, e.g. login, submit order>]`, `pack_if_targets_missed: true`. Take the actions from this project's BRD transactions, never from another project.
 Steps must respect `max_vus` (first step at most 5, then at most 2x); `envconf.py check` enforces this.
+
+## Gate ids (returned by `tools/next.py`; these are the only gates the tool raises)
+- `sources`: `sources/` is empty. Ask the user to add the client's files.
+- `business_facts`: must-haves still missing after intake. One message: questions, advised values, run plan.
+- `environment`: `environments.yaml` missing or failing `envconf.py check`.
+- `authorisation`: the environment is `not_confirmed`. Only the user decides; record their statement and date in `authorisation_note`.
+- `credentials`: the catalogue needs a login and the `credentials_env_vars` are not exported. The user runs the target check in their own terminal.
+- `run_plan`: no approved run plan at the load stage.
+- `failed_run`: the latest run was aborted, errored, or the smoke run did not pass. Never retry on your own.
+- `targets_missed`: a load run missed targets and the plan does not allow packing missed targets.
+
+Stop points that need judgement and are not detected by the tool (a write action outside the plan during discovery, an unexplained target-check difference, an app with no backend API) are listed below; raise them yourself.
 
 ## Stop and ask the user only for
 - Stage 1: the business facts and the "accept advised values" reply (see `requirements-intake`), in one message. Never ask a field twice.

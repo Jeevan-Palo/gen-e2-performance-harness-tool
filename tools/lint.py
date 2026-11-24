@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Check the harness repo itself (not a project). Usage: python tools/lint.py   (from the repo root; exit 1 if anything is wrong)
-Checks: skill and prompt frontmatter, names, references to tools/skills/prompts that do not exist, rule numbering in
+Checks: skill, prompt and agent frontmatter (handoff targets exist, the runner agent has no edit tool), every next.py gate described in the end-to-end skill, names, references to tools/skills/prompts that do not exist, rule numbering in
 copilot-instructions.md, tools compile, templates and project YAML parse, secret-like text. Requires PyYAML.
 """
 import sys, os, re, ast, glob, yaml
@@ -35,12 +35,27 @@ def lint():
         fm, err = frontmatter(f)
         if err: P.append(f"{rel(f)}: {err}"); continue
         if not str(fm.get("description", "")).strip(): P.append(f"{rel(f)}: description is empty")
+    agents = sorted(glob.glob(os.path.join(ROOT, ".github", "agents", "*.agent.md")))
+    agent_names = set()
+    for f in agents:
+        fm, err = frontmatter(f)
+        if err: P.append(f"{rel(f)}: {err}"); continue
+        stem = os.path.basename(f)[:-len(".agent.md")]; agent_names.add(stem)
+        if fm.get("name") != stem: P.append(f"{rel(f)}: name '{fm.get('name')}' must equal the file name '{stem}'")
+        if not str(fm.get("description", "")).strip(): P.append(f"{rel(f)}: description is empty")
+        if not isinstance(fm.get("tools"), list) or not fm.get("tools"): P.append(f"{rel(f)}: tools must be a non-empty list")
+        if stem == "perf-runner" and any(x in ("editFiles", "edit", "create") for x in fm.get("tools") or []):
+            P.append(f"{rel(f)}: the runner must not have an edit tool (it must not be able to change run files, reports or the pack)")
+    for f in agents:
+        fm, err = frontmatter(f)
+        for h in (fm or {}).get("handoffs") or []:
+            if h.get("agent") not in agent_names: P.append(f"{rel(f)}: handoff to agent '{h.get('agent')}', which does not exist")
     for f in tools:
         try: ast.parse(read(f))
         except SyntaxError as e: P.append(f"{rel(f)}: syntax error line {e.lineno}")
     known_tools = {os.path.basename(t) for t in tools}; known_skills = {os.path.basename(os.path.dirname(s)) for s in skills}
     known_prompts = {os.path.basename(p) for p in prompts}
-    docs = [os.path.join(ROOT, ".github", "copilot-instructions.md"), os.path.join(ROOT, "README.md"), os.path.join(ROOT, "docs", "overview.md")] + skills + prompts
+    docs = [os.path.join(ROOT, ".github", "copilot-instructions.md"), os.path.join(ROOT, "README.md"), os.path.join(ROOT, "docs", "overview.md")] + skills + prompts + agents
     for f in docs:
         if not os.path.exists(f): P.append(f"missing file: {rel(f)}"); continue
         t = read(f)
@@ -51,6 +66,12 @@ def lint():
             if m not in known_skills: P.append(f"{rel(f)}: refers to skill '{m}', which does not exist")
         for m in set(re.findall(r"\.github/prompts/([A-Za-z0-9\-]+\.prompt\.md)", t)):
             if m not in known_prompts: P.append(f"{rel(f)}: refers to prompt {m}, which does not exist")
+    e2e = os.path.join(ROOT, ".github", "skills", "end-to-end", "SKILL.md")
+    nx = os.path.join(ROOT, "tools", "next.py")
+    if os.path.exists(e2e) and os.path.exists(nx):
+        gates = re.search(r"(?s)GATES = \{(.*?)\n\}", read(nx))
+        for g in re.findall(r'(?m)^    "([a-z_]+)":', gates.group(1) if gates else ""):
+            if f"`{g}`" not in read(e2e): P.append(f"{rel(e2e)}: gate `{g}` raised by tools/next.py is not described")
     for rf in ("requirements.txt", "setup.sh", "setup.ps1"):
         if not os.path.exists(os.path.join(ROOT, rf)): P.append(f"missing file: {rf} (needed so other people can set up the repo)")
     ci = os.path.join(ROOT, ".github", "copilot-instructions.md")

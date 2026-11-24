@@ -87,6 +87,21 @@ class TestLint(unittest.TestCase):
         self.assertEqual([r for r in res if r[1] == "PyYAML"][0][0], "OK")  # this test run imports yaml
         rc, out = tool("doctor.py"); self.assertEqual(rc, 0, out); self.assertIn("DOCTOR: OK", out)
 
+    def test_lint_flags_bad_agents_and_undocumented_gates(self):
+        import lint
+        tmp = tempfile.mkdtemp(); old = lint.ROOT
+        try:
+            for sub in (".github", "tools", "templates"): shutil.copytree(os.path.join(ROOT, sub), os.path.join(tmp, sub))
+            runner = os.path.join(tmp, ".github", "agents", "perf-runner.agent.md"); s = open(runner, encoding="utf-8").read()
+            open(runner, "w", encoding="utf-8").write(s.replace("tools: ['search', 'runCommands']", "tools: ['search', 'editFiles']"))
+            orch = os.path.join(tmp, ".github", "agents", "perf-orchestrator.agent.md"); s = open(orch, encoding="utf-8").read()
+            open(orch, "w", encoding="utf-8").write(s.replace("agent: perf-scripter", "agent: perf-nobody"))
+            e2e = os.path.join(tmp, ".github", "skills", "end-to-end", "SKILL.md"); s = open(e2e, encoding="utf-8").read()
+            open(e2e, "w", encoding="utf-8").write(s.replace("`failed_run`", "failed run"))
+            lint.ROOT = tmp; problems = "\n".join(lint.lint())
+            self.assertIn("must not have an edit tool", problems); self.assertIn("perf-nobody", problems); self.assertIn("gate `failed_run`", problems)
+        finally: lint.ROOT = old; shutil.rmtree(tmp)
+
     def test_lint_flags_old_step_numbers_and_missing_requirements(self):
         import lint
         tmp = tempfile.mkdtemp(); old = lint.ROOT
@@ -321,6 +336,65 @@ class TestReportAndPack(unittest.TestCase):
         self.assertTrue(j["stages"][0]["done"] or shutil.which("pandoc"))
         if shutil.which("pandoc"):
             tool("brdexport.py", d); rc, out = tool("status.py", d, "--json"); self.assertTrue(json.loads(out)["stages"][0]["done"])
+
+
+class TestOrchestration(unittest.TestCase):
+    def setUp(self): self.tmp = tempfile.mkdtemp(); self.addCleanup(shutil.rmtree, self.tmp)
+
+    def nxt(self, d):
+        rc, out = tool("next.py", d, "--json"); return rc, json.loads(out)
+
+    def ready(self, **kw):
+        """A project whose stages 1-5 are done (target check recorded), in the state just before the smoke run."""
+        d = make_project(self.tmp, **kw)
+        if shutil.which("pandoc"): tool("brdexport.py", d)
+        cat = os.path.join(d, "api-catalogue.yaml")
+        write(os.path.join(d, "target-check.json"), json.dumps({"environment": "local", "calls_ok": 6, "calls_differ": 0, "calls_skipped": 0}))
+        os.utime(os.path.join(d, "target-check.json"), (os.path.getmtime(cat) + 5,) * 2)
+        return d
+
+    def set_env(self, d, **changes):
+        p = os.path.join(d, "environments.yaml"); cfg = yaml.safe_load(open(p)); cfg["environments"]["local"].update(changes); yaml.safe_dump(cfg, open(p, "w"))
+        if shutil.which("pandoc"): tool("brdexport.py", d)  # the Word file is rebuilt after any environment change
+
+    def test_new_project_walks_the_early_gates(self):
+        d = os.path.join(self.tmp, "projects", "AnyClient", "anyapp"); os.makedirs(os.path.join(d, "sources"))
+        rc, j = self.nxt(d); self.assertEqual((rc, j["gate"]), (2, "sources"))
+        write(os.path.join(d, "sources", "requirements.txt"), "peak 100 users\n")
+        shutil.copy(os.path.join(ROOT, "templates", "brd.template.yaml"), os.path.join(d, "brd.yaml"))
+        rc, j = self.nxt(d); self.assertEqual(rc, 1); self.assertFalse(j["needs_human"]); self.assertEqual(j["stage"]["n"], 1)  # intake first, no questions yet
+        brd = yaml.safe_load(open(os.path.join(d, "brd.yaml"))); brd["evidence"] = [{"field": "purpose", "source": "requirements.txt"}]; yaml.safe_dump(brd, open(os.path.join(d, "brd.yaml"), "w"))
+        rc, j = self.nxt(d); self.assertEqual((rc, j["gate"]), (2, "business_facts"))
+
+    def test_authorisation_is_always_a_human_gate(self):
+        d = make_project(self.tmp, auth="not_confirmed"); rc, j = self.nxt(d)
+        self.assertEqual((rc, j["gate"], j["actor"]), (2, "authorisation", "human")); self.assertIn("Only you", j["ask"])
+
+    def test_run_plan_gate_then_proceed_then_failed_run_stops(self):
+        d = self.ready(runs=[("20260101T000000Z-local-smoke-1vu", "smoke", 1, "passed", 50)])
+        for r in os.listdir(os.path.join(d, "runs")): os.utime(os.path.join(d, "runs", r, "run.json"), (os.path.getmtime(os.path.join(d, "k6", "script.js")) + 5,) * 2)
+        rc, j = self.nxt(d); self.assertEqual((rc, j["stage"]["n"], j["gate"]), (2, 7, "run_plan"))
+        self.set_env(d, run_plan={"approved_note": "QA lead in chat", "load_steps": [5], "ramp_up": "30s", "steady": "3m", "ramp_down": "30s"})
+        rc, j = self.nxt(d); self.assertEqual(rc, 1); self.assertEqual(j["actor"], "tool"); self.assertIn("runk6.py", j["command"]); self.assertIn("--vus 5", j["command"])
+        write(os.path.join(d, "runs", "r-abort", "run.json"), json.dumps({"profile": "load", "vus": 5, "env": "local", "outcome": "aborted_by_threshold"}))
+        rc, j = self.nxt(d); self.assertEqual((rc, j["gate"]), (2, "failed_run")); self.assertIn("will not retry", j["ask"])
+
+    def test_missed_targets_stop_unless_the_plan_allows_packing(self):
+        d = self.ready(runs=[("20260101T000000Z-local-smoke-1vu", "smoke", 1, "passed", 50), ("r-miss", "load", 5, "thresholds_failed", 2500)])
+        t = os.path.getmtime(os.path.join(d, "k6", "script.js")) + 5
+        for r in os.listdir(os.path.join(d, "runs")): os.utime(os.path.join(d, "runs", r, "run.json"), (t,) * 2)
+        self.set_env(d, run_plan={"approved_note": "QA lead in chat", "load_steps": [5, 10], "pack_if_targets_missed": False})
+        rc, j = self.nxt(d); self.assertEqual((rc, j["gate"]), (2, "targets_missed"))
+
+    def test_all_done_exits_zero(self):
+        d = make_project(self.tmp, runs=[("r1", "smoke", 1, "passed", 50), ("r2", "load", 10, "passed", 80)])
+        self.assertEqual(tool("report.py", d, "--run", "r2")[0], 0); self.assertEqual(tool("clientpack.py", d)[0], 0)
+        if shutil.which("pandoc"): tool("brdexport.py", d)
+        write(os.path.join(d, "target-check.json"), json.dumps({"environment": "local", "calls_ok": 6, "calls_differ": 0, "calls_skipped": 0}))
+        os.utime(os.path.join(d, "target-check.json"), (os.path.getmtime(os.path.join(d, "api-catalogue.yaml")) + 5,) * 2)
+        t = os.path.getmtime(os.path.join(d, "k6", "script.js")) + 5
+        for r in ("r1", "r2"): os.utime(os.path.join(d, "runs", r, "run.json"), (t,) * 2)
+        rc, j = self.nxt(d); self.assertEqual((rc, j["done"]), (0, True), j)
 
 
 class TestMonitor(unittest.TestCase):

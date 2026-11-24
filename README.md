@@ -21,10 +21,11 @@ Client documents in, a tested k6 load run and a client pack out. Copilot (VS Cod
 
 ## Use it
 Open Copilot Chat, switch to **Agent** mode, and type:
-- `/run-end-to-end` for a new or existing project. It runs `python tools/status.py <project>`, does the next unfinished stage and stops only at human decisions (missing business facts, environment and authorisation, write actions, a failed or aborted run, sharing the pack).
+- `/run-end-to-end` for a new or existing project. It runs `python tools/next.py <project>`, does the next action and stops only at human gates (missing business facts, environment and authorisation, write actions, a failed or aborted run, sharing the pack).
 - `/start-project` to create a new project and go straight through to the client pack.
 - Or one stage at a time: `/build-catalogue`, `/build-script`, `/run-test`, `/build-report`, `/build-pack`.
-- To see where a project stands, or resume after a break: `python tools/status.py projects/<client>/<app>`.
+- To see where a project stands, or resume after a break: `python tools/status.py projects/<client>/<app>` (all stages) or `python tools/next.py projects/<client>/<app>` (next action; exit code 2 means a human decides first).
+- Optional: in the Copilot Chat agent picker choose **perf-orchestrator**; it hands each stage to a specialist agent from `.github/agents/`. Needs a VS Code version with custom agents; the prompts above work without it.
 
 Put the client's files in `projects/<client>/<app>/sources/` before intake.
 
