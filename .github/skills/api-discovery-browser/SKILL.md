@@ -16,7 +16,7 @@ Use only on an environment the user has confirmed we may use. Check `environment
 
 ## Procedure
 1. Pick the BRD transactions to discover (T1, T2, ...) and the start URL from the user.
-2. Preferred method, if a browser tool is available (for example Playwright MCP): open each page of the flow, watch network requests of type XHR/fetch, and note per request: method, URL, request body, response status, response fields, page, and what the user was doing.
+2. Preferred method, if a browser tool is available (the repo ships an optional Playwright MCP server in `.vscode/mcp.json`; it needs Node.js and the user must start it): open each page of the flow, watch network requests of type XHR/fetch, and note per request: method, URL, request body, response status, response fields, page, and what the user was doing. The safety rules above apply to MCP browsing exactly as to any other browsing.
 3. Fallback, always works: ask the user to record a HAR file (Chrome: open DevTools > Network, tick "Preserve log", perform the flow, then "Save all as HAR with content") and put it in `sources/`. Then import it:
    `python tools/catalogue.py import-har <catalogue> <file.har> <base_url>`
    The script keeps only same-host API calls, lists third-party hosts under `meta.excluded_hosts`, and removes auth headers, cookies and sensitive body values.

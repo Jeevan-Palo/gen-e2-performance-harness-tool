@@ -36,4 +36,4 @@ Start with `/check-setup` once, then `/run-end-to-end` (or `/start-project` for 
 
 ## Example projects
 
-`projects/_example/` is the sanitised sample for a first dry run. Other folders under `projects/` are real practice or client runs; their state is in each project's `STATE.md`, and `python tools/status.py <project>` shows the current stage.
+`projects/_example/` is the only project tracked in git (a neutral fixture for a first dry run with `python tools/brd.py check projects/_example/brd.yaml`). Real client projects live under `projects/` locally but are git-ignored; `python tools/status.py <project>` shows the current stage of any of them.

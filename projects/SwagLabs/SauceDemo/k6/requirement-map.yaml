@@ -1,5 +1,0 @@
-- {requirement: "PR-01", k6_metric: "transaction_duration{transaction:T1}", threshold: "p(95)<2000"}
-- {requirement: "PR-02", k6_metric: "transaction_duration{transaction:T2}", threshold: "p(95)<2000"}
-- {requirement: "PR-03", k6_metric: "transaction_duration{transaction:T3}", threshold: "p(95)<2000"}
-- {requirement: "PR-04", k6_metric: "transaction_duration{transaction:T4}", threshold: "p(95)<3000"}
-- {requirement: "PR-05", k6_metric: "transaction_failed", threshold: "rate<0.01"}

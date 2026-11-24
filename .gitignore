@@ -1,3 +1,6 @@
 .venv/
 .DS_Store
 __pycache__/
+# Real client projects hold client documents and results: keep them out of this repo (keep them locally or in a private repo).
+projects/*
+!projects/_example/

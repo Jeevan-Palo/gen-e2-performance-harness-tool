@@ -1,4 +1,0 @@
-# Maps each active BRD requirement to the k6 metric/threshold that proves it.
-- requirement: "PR-01"
-  k6_metric: "http_req_failed"
-  threshold: "rate<0.01"

@@ -45,12 +45,14 @@ Environments: `environments.yaml` has one block per environment (URL, owner, aut
 Monitoring: for a local Docker app set `monitoring: {source: docker_stats, containers: [<names from docker ps>], interval_seconds: 5}`. Azure, Dynatrace and client APM collectors are not built.
 Report and pack never send anything; sharing is always your decision.
 
+Optional MCP: `.vscode/mcp.json` defines a Playwright MCP server for browser discovery in stage 3 (needs Node.js; VS Code asks before starting it). Everything else works without it. Discovery stays read-only.
+
 ## Ground rules for everyone who uses this repo
 1. **Only test systems you are authorised to test.** Record the owner's authorisation in `environments.yaml`. Never set `authorisation` just to get a run through, and never use `--force-step`.
 2. **No secrets in any file.** Credentials are environment variables; files hold only their names. Redact tokens, cookies and personal data from sources.
 3. **Never invent a value.** Unknown means empty plus an open item; the tools and Copilot must ask.
 4. **Runs only through `tools/runk6.py`**, reports only through `tools/report.py`, the pack only through `tools/clientpack.py`. Never edit files under `runs/` or `client-pack/` by hand.
-5. **Keep real client data out of shared copies.** `projects/<client>/` holds client documents and results; share or push it only where the client allows. Keep only `projects/_example/` in a public copy.
+5. **Keep real client data out of this repo.** `projects/*` is git-ignored except `projects/_example/`, so `git add` never picks up client documents or results. Keep real projects locally, or put them in their own private repo (`cd projects && git init`) and back them up there. Share only where the client allows.
 6. **Start small.** Smoke first, first load step at most 5 users, then at most double the last passed step.
 7. **After changing `tools/`, `.github/` or `templates/`** run `python tools/lint.py` and `python -m unittest discover -s tests`. Never weaken a check or a test to make it pass.
 8. **Do not add extra documents** (status logs, handoff notes). Project state lives in `brd.yaml`, `environments.yaml`, `open-items.md`, `api-catalogue.yaml` and `STATE.md`.
